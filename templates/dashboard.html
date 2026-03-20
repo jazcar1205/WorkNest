@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 style="color:#80461B;">Dashboard</h1>
+
+<div class="row">
+    <div class="card">
+        <h3>Open Tasks</h3>
+        <p>{{ open_tasks }}</p>
+    </div>
+    <div class="card">
+        <h3>Open Requests</h3>
+        <p>{{ open_requests }}</p>
+    </div>
+    <div class="card">
+        <h3>Open Tickets</h3>
+        <p>{{ open_tickets }}</p>
+    </div>
+    <div class="card">
+        <h3>Completed</h3>
+        <p>{{ completed }}</p>
+    </div>
+</div>
+
+{% endblock %}

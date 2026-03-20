@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="center">
+
+    <div class="card">
+        <h1>Welcome to WorkNest</h1>
+        <p>You have successfully logged in.</p>
+
+        <a href="/Dashboard" class="btn">Go to Dashboard</a>
+    </div>
+
+</div>
+
+<style>
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70vh;
+}
+
+/* Card */
+.card {
+    background: #fffaf5;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid #80461B;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Title */
+.card h1 {
+    font-family: 'Pacifico', cursive;
+    color: #80461B;
+    margin-bottom: 10px;
+}
+
+/* Text */
+.card p {
+    color: #555;
+}
+
+/* Button */
+.btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #80461B;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+.btn:hover {
+    background: #5a2f12;
+}
+</style>
+
+{% endblock %}

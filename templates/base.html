@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WorkNest</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Courier New", monospace;
+            background: #F5E6D3;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: #80461B;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Pacifico', cursive;
+            color: white;
+            font-size: 24px;
+        }
+
+        .nav-links a {
+            color: white;
+            margin: 0 12px;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .create-btn {
+            background: white;
+            color: #80461B;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .create-btn:hover {
+            background: #f3e5d6;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+}
+
+        .card {
+            background: #fffaf5;
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1;
+            text-align: center;
+            border: 2px solid #80461B;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">WorkNest</div>
+
+    <div class="nav-links">
+        <a href="/Dashboard">Dashboard</a>
+        <a href="/openTasks">Tasks</a>
+        <a href="/openRequests">Requests</a>
+        <a href="/openTickets">Tickets</a>
+        <a href="/assigned">My Work</a>
+        <a href="/appointments">Appointments</a>
+    </div>
+
+    <a href="/create" class="create-btn">+ Create</a>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="content">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 style="font-family: 'Pacifico', cursive; color:#80461B;">Tickets</h1>
+
+<div class="container">
+    <table>
+        <tr>
+            <th>#</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Assigned</th>
+        </tr>
+
+        {% for ticket in tickets %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ ticket.description }}</td>
+            <td>
+                <span class="status {{ ticket.status|lower }}">
+                    {{ ticket.status }}
+                </span>
+            </td>
+            <td>{{ ticket.assigned }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<style>
+.container {
+    margin-top: 20px;
+    background: #fffaf5;
+    border: 2px solid #80461B;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    border-bottom: 2px solid #80461B;
+    padding: 10px;
+    color: #80461B;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Status colors */
+.status.open {
+    color: red;
+    font-weight: bold;
+}
+
+.status.in\ progress {
+    color: orange;
+    font-weight: bold;
+}
+
+.status.completed {
+    color: green;
+    font-weight: bold;
+}
+</style>
+
+{% endblock %}
