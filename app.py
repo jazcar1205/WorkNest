@@ -69,13 +69,21 @@ def appointments():
     }).sort("date", 1))
 
     month_appts = list(ap_collection.find({"date": {"$regex": f"^{month_str}"}}))
-    appt_days = set()
+
+    # Build {day: [title, ...]} for calendar labels
+    appt_by_day = {}
     for a in month_appts:
         if a.get("date"):
             try:
-                appt_days.add(int(a["date"].split("-")[2]))
+                day = int(a["date"].split("-")[2])
+                label = a.get("title") or a.get("description") or "Appointment"
+                appt_by_day.setdefault(day, []).append(label)
             except Exception:
                 pass
+
+    # Convert ObjectId to string so templates can use them as data attributes
+    for a in upcoming:
+        a["_id"] = str(a["_id"])
 
     cal = cal_module.Calendar(firstweekday=6)  # Sunday first
     cal_weeks = cal.monthdayscalendar(now.year, now.month)
@@ -85,21 +93,46 @@ def appointments():
         cal_weeks=cal_weeks,
         month_name=now.strftime("%B %Y"),
         today_day=now.day,
-        appt_days=appt_days
+        appt_by_day=appt_by_day
     )
 
 @app.route("/create_appointment", methods=["POST"])
 def create_appointment():
     data = {
-        "date": request.form.get("date"),
-        "time": request.form.get("time"),
-        "invite": request.form.get("invite"),
+        "title":      request.form.get("title"),
+        "date":       request.form.get("date"),
+        "start_time": request.form.get("start_time"),
+        "end_time":   request.form.get("end_time"),
+        "invite":     request.form.get("invite"),
         "description": request.form.get("description")
     }
-
     ap_collection.insert_one(data)
-
     return redirect(url_for("appointments"))
+
+@app.route("/update_appointment", methods=["POST"])
+def update_appointment():
+    data = request.get_json()
+    appt_id = data.get("id")
+    if not appt_id:
+        return jsonify({"error": "Missing ID"}), 400
+    ap_collection.update_one(
+        {"_id": ObjectId(appt_id)},
+        {"$set": {
+            "title":       data.get("title"),
+            "date":        data.get("date"),
+            "start_time":  data.get("start_time"),
+            "end_time":    data.get("end_time"),
+            "invite":      data.get("invite"),
+            "description": data.get("description")
+        }}
+    )
+    return jsonify({"success": True})
+
+@app.route("/delete_appointment", methods=["POST"])
+def delete_appointment():
+    data = request.get_json()
+    ap_collection.delete_one({"_id": ObjectId(data.get("id"))})
+    return jsonify({"success": True})
 
 @app.route("/delete_item", methods=["POST"])
 def delete_item():

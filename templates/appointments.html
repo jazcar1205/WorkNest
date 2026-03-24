@@ -12,21 +12,34 @@
     <!-- LEFT: Upcoming + Create -->
     <div class="appt-left">
 
+        <!-- Upcoming list -->
         <div class="section-card" style="padding:0;overflow:hidden">
-            <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border)">
+            <div class="appt-list-header">
                 <p class="section-title" style="margin:0">Upcoming</p>
+                <span class="appt-count">{{ appointments|length }}</span>
             </div>
             <div class="appt-list">
                 {% if appointments|length == 0 %}
                     <p class="empty">No upcoming appointments.</p>
                 {% else %}
                     {% for appt in appointments %}
-                    <div class="appt-item">
+                    <div class="appt-item"
+                         data-id="{{ appt._id }}"
+                         data-title="{{ appt.title or '' }}"
+                         data-date="{{ appt.date or '' }}"
+                         data-start="{{ appt.start_time or '' }}"
+                         data-end="{{ appt.end_time or '' }}"
+                         data-invite="{{ appt.invite or '' }}"
+                         data-description="{{ appt.description or '' }}"
+                         onclick="openApptModal(this)">
+                        <div class="appt-title">{{ appt.title or 'Appointment' }}</div>
                         <div class="appt-dateline">
-                            <span class="appt-date">{{ appt.date }}</span>
-                            <span class="appt-time">{{ appt.time }}</span>
+                            <span class="appt-date-badge">{{ appt.date }}</span>
+                            <span class="appt-time-badge" data-start="{{ appt.start_time or '' }}" data-end="{{ appt.end_time or '' }}"></span>
                         </div>
+                        {% if appt.description %}
                         <div class="appt-desc">{{ appt.description }}</div>
+                        {% endif %}
                         {% if appt.invite %}
                         <div class="appt-person">{{ appt.invite }}</div>
                         {% endif %}
@@ -36,20 +49,33 @@
             </div>
         </div>
 
+        <!-- Create form -->
         <div class="section-card">
             <p class="section-title">New Appointment</p>
             <form method="POST" action="/create_appointment">
+
+                <label>Title</label>
+                <input type="text" name="title" placeholder="e.g. Team Standup" required>
+
                 <label>Date</label>
                 <input type="date" name="date" required>
 
-                <label>Time</label>
-                <input type="text" name="time" placeholder="e.g. 2:00 PM">
+                <div style="display:flex;gap:12px">
+                    <div style="flex:1">
+                        <label>Start Time</label>
+                        <input type="time" name="start_time">
+                    </div>
+                    <div style="flex:1">
+                        <label>End Time</label>
+                        <input type="time" name="end_time">
+                    </div>
+                </div>
 
                 <label>Invite</label>
                 <input type="text" name="invite" placeholder="Person's name">
 
                 <label>Description</label>
-                <textarea name="description" placeholder="What's this meeting about?" style="height:72px"></textarea>
+                <textarea name="description" placeholder="What's this meeting about?" style="height:64px"></textarea>
 
                 <button type="submit" class="btn btn-primary" style="width:100%">Create Appointment</button>
             </form>
@@ -72,24 +98,21 @@
                 <div class="cal-day-header">Fri</div>
                 <div class="cal-day-header">Sat</div>
 
-                <!-- Calendar weeks from Flask -->
                 {% for week in cal_weeks %}
                     {% for day in week %}
                         {% if day == 0 %}
                             <div class="cal-cell cal-empty"></div>
-                        {% elif day == today_day %}
-                            <div class="cal-cell cal-today">
-                                <span class="cal-num">{{ day }}</span>
-                                {% if day in appt_days %}<div class="event-dot today-dot"></div>{% endif %}
-                            </div>
-                        {% elif day in appt_days %}
-                            <div class="cal-cell cal-has-event">
-                                <span class="cal-num">{{ day }}</span>
-                                <div class="event-dot"></div>
-                            </div>
                         {% else %}
-                            <div class="cal-cell">
-                                <span class="cal-num">{{ day }}</span>
+                            <div class="cal-cell {% if day == today_day %}cal-today{% endif %}">
+                                <span class="cal-num {% if day == today_day %}cal-today-num{% endif %}">{{ day }}</span>
+                                {% if day in appt_by_day %}
+                                    {% for label in appt_by_day[day] %}
+                                        <div class="cal-event">
+                                            <span class="cal-event-dot"></span>
+                                            <span class="cal-event-label">{{ label[:16] }}{% if label|length > 16 %}…{% endif %}</span>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
@@ -100,6 +123,128 @@
     </div>
 
 </div>
+
+<!-- APPOINTMENT MODAL -->
+<div id="apptModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Appointment Details</h3>
+            <button class="modal-close" onclick="closeApptModal()">&times;</button>
+        </div>
+
+        <input type="hidden" id="appt-id">
+
+        <label>Title</label>
+        <input id="appt-title" disabled>
+
+        <label>Date</label>
+        <input type="date" id="appt-date" disabled>
+
+        <div style="display:flex;gap:14px">
+            <div style="flex:1">
+                <label>Start Time</label>
+                <input type="time" id="appt-start" disabled>
+            </div>
+            <div style="flex:1">
+                <label>End Time</label>
+                <input type="time" id="appt-end" disabled>
+            </div>
+        </div>
+
+        <label>Invite</label>
+        <input id="appt-invite" disabled>
+
+        <label>Description</label>
+        <textarea id="appt-description" style="height:80px" disabled></textarea>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="enableApptEdit()">Edit</button>
+            <button class="btn btn-primary"   onclick="saveAppt()">Save Changes</button>
+            <button class="btn btn-danger"    onclick="deleteAppt()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── 12-hour display helper ─────────────────────────
+function fmt12(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+// Render all time badges on page load
+document.querySelectorAll('.appt-time-badge').forEach(function(el) {
+    const s = el.dataset.start, e = el.dataset.end;
+    if (s || e) {
+        el.textContent = s && e ? `${fmt12(s)} – ${fmt12(e)}` : fmt12(s || e);
+    }
+});
+
+// ── Modal ──────────────────────────────────────────
+function openApptModal(el) {
+    document.getElementById('appt-id').value          = el.dataset.id;
+    document.getElementById('appt-title').value       = el.dataset.title;
+    document.getElementById('appt-date').value        = el.dataset.date;
+    document.getElementById('appt-start').value       = el.dataset.start;
+    document.getElementById('appt-end').value         = el.dataset.end;
+    document.getElementById('appt-invite').value      = el.dataset.invite;
+    document.getElementById('appt-description').value = el.dataset.description;
+    disableApptFields();
+    document.getElementById('apptModal').style.display = 'block';
+}
+
+function closeApptModal() {
+    document.getElementById('apptModal').style.display = 'none';
+}
+
+function enableApptEdit() {
+    document.querySelectorAll('#apptModal input:not([type=hidden]), #apptModal textarea')
+        .forEach(function(el) { el.disabled = false; });
+}
+
+function disableApptFields() {
+    document.querySelectorAll('#apptModal input, #apptModal textarea')
+        .forEach(function(el) { el.disabled = true; });
+}
+
+function saveAppt() {
+    const data = {
+        id:          document.getElementById('appt-id').value,
+        title:       document.getElementById('appt-title').value,
+        date:        document.getElementById('appt-date').value,
+        start_time:  document.getElementById('appt-start').value,
+        end_time:    document.getElementById('appt-end').value,
+        invite:      document.getElementById('appt-invite').value,
+        description: document.getElementById('appt-description').value
+    };
+    fetch('/update_appointment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(r => { if (r.success) location.reload(); else alert('Update failed'); });
+}
+
+function deleteAppt() {
+    if (!confirm('Delete this appointment?')) return;
+    fetch('/delete_appointment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: document.getElementById('appt-id').value })
+    })
+    .then(r => r.json())
+    .then(() => location.reload());
+}
+
+window.onclick = function(e) {
+    const m = document.getElementById('apptModal');
+    if (e.target === m) m.style.display = 'none';
+};
+</script>
 
 <style>
 .appt-layout {
@@ -119,8 +264,25 @@
 .appt-right { flex: 1; min-width: 0; }
 
 /* Upcoming list */
+.appt-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.appt-count {
+    font-size: 11.5px;
+    font-weight: 700;
+    background: #F0E8E0;
+    color: var(--brown);
+    padding: 2px 9px;
+    border-radius: 20px;
+}
+
 .appt-list {
-    max-height: 320px;
+    max-height: 340px;
     overflow-y: auto;
     padding: 10px 12px;
 }
@@ -129,52 +291,68 @@
 .appt-list::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 99px; }
 
 .appt-item {
-    padding: 11px 12px;
+    padding: 11px 13px;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: #FDFAF7;
     margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
 }
 .appt-item:last-child { margin-bottom: 0; }
-.appt-item:hover { background: #FDF7F0; }
+.appt-item:hover { background: #FDF0E2; border-color: var(--brown-mid); }
+
+.appt-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 5px;
+}
 
 .appt-dateline {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 5px;
 }
 
-.appt-date {
-    font-size: 12px;
-    font-weight: 700;
+.appt-date-badge {
+    font-size: 11.5px;
+    font-weight: 600;
     color: var(--brown);
+    background: #F5EDE4;
+    padding: 2px 8px;
+    border-radius: 20px;
 }
 
-.appt-time {
+.appt-time-badge {
     font-size: 11.5px;
     color: var(--text-muted);
-    background: #F0E8E0;
-    padding: 1px 7px;
+    background: #F0EEEC;
+    padding: 2px 8px;
     border-radius: 20px;
 }
 
 .appt-desc {
-    font-size: 13px;
-    color: var(--text);
-    margin-bottom: 3px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .appt-person {
     font-size: 11.5px;
-    color: var(--text-muted);
+    color: var(--text-light);
 }
 
 /* Calendar grid */
 .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    gap: 5px;
 }
 
 .cal-day-header {
@@ -184,16 +362,16 @@
     letter-spacing: 0.05em;
     color: var(--text-muted);
     text-align: center;
-    padding: 6px 0;
+    padding: 6px 0 8px;
 }
 
 .cal-cell {
     border: 1px solid var(--border);
-    border-radius: 8px;
-    min-height: 72px;
-    padding: 6px 8px;
+    border-radius: 7px;
+    min-height: 80px;
+    padding: 6px 7px;
     background: var(--white);
-    position: relative;
+    overflow: hidden;
 }
 
 .cal-empty {
@@ -206,38 +384,53 @@
     border-color: var(--brown-mid);
 }
 
-.cal-has-event {
-    background: #FDFAF7;
-}
-
 .cal-num {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-muted);
     display: block;
+    margin-bottom: 4px;
 }
 
-.cal-today .cal-num {
-    background: var(--brown);
-    color: white;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
+.cal-today-num {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--brown);
+    color: white;
+    border-radius: 50%;
     font-size: 11px;
+    font-weight: 700;
 }
 
-.event-dot {
-    width: 7px;
-    height: 7px;
+/* Calendar event row */
+.cal-event {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 3px;
+}
+
+.cal-event-dot {
+    width: 6px;
+    height: 6px;
     background: var(--brown-mid);
     border-radius: 50%;
-    margin-top: 6px;
+    flex-shrink: 0;
 }
 
-.today-dot { background: var(--brown-dark); }
+.cal-event-label {
+    font-size: 10px;
+    color: var(--brown);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.3;
+}
 </style>
 
 {% endblock %}
