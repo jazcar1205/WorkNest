@@ -2,25 +2,94 @@
 
 {% block content %}
 
-<h1 style="color:#80461B;">Dashboard</h1>
+<h1 class="title">Dashboard</h1>
 
 <div class="row">
-    <div class="card">
+
+    <div class="card open">
         <h3>Open Tasks</h3>
         <p>{{ open_tasks }}</p>
     </div>
-    <div class="card">
+
+    <div class="card progress">
+        <h3>In Progress</h3>
+        <p>{{ in_progress }}</p>
+    </div>
+
+    <div class="card request">
         <h3>Open Requests</h3>
         <p>{{ open_requests }}</p>
     </div>
-    <div class="card">
+
+    <div class="card ticket">
         <h3>Open Tickets</h3>
         <p>{{ open_tickets }}</p>
     </div>
-    <div class="card">
+
+    <div class="card completed">
         <h3>Completed</h3>
         <p>{{ completed }}</p>
     </div>
+
 </div>
+
+<style>
+
+/* Title */
+.title {
+    font-family: 'Pacifico', cursive;
+    color: #80461B;
+}
+
+/* Layout */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Cards */
+.card {
+    flex: 1 1 200px;
+    background: #fffaf5;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid #80461B;
+}
+
+.card h3 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* Status Colors */
+.card.open {
+    border-left: 6px solid red;
+}
+
+.card.progress {
+    border-left: 6px solid orange;
+}
+
+.card.completed {
+    border-left: 6px solid green;
+}
+
+/* Optional category colors */
+.card.request {
+    border-left: 6px solid #6a5acd;
+}
+
+.card.ticket {
+    border-left: 6px solid #008b8b;
+}
+
+</style>
 
 {% endblock %}

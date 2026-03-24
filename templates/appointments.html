@@ -2,28 +2,34 @@
 
 {% block content %}
 
-<h1 style="font-family: 'Pacifico', cursive; color:#80461B;">Appointments</h1>
+<h1 class="title">Appointments</h1>
 
 <div class="main">
 
-    <!-- LEFT SIDE -->
     <div class="left">
 
-        <!-- Upcoming -->
-        <div class="card">
+        <div class="card scroll-card">
             <h3>Upcoming</h3>
-            {% for appt in appointments %}
-                <p><strong>{{ appt.date }}</strong> - {{ appt.description }}</p>
-            {% endfor %}
+
+            {% if appointments|length == 0 %}
+                <p class="empty">No upcoming appointments</p>
+            {% else %}
+                {% for appt in appointments %}
+                    <div class="appt">
+                        <strong>{{ appt.date }} {{ appt.time }}</strong><br>
+                        <span>{{ appt.description }}</span><br>
+                        <small>👤 {{ appt.invite }}</small>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
 
-        <!-- Create -->
         <div class="card">
             <h3>Create Appointment</h3>
             <form method="POST" action="/create_appointment">
                 <input type="date" name="date" required>
-                <input type="text" name="time" placeholder="Time">
-                <input type="text" name="invite" placeholder="Invite">
+                <input type="text" name="time" placeholder="Time (e.g. 2:00 PM)">
+                <input type="text" name="invite" placeholder="Invite person">
                 <textarea name="description" placeholder="Description"></textarea>
                 <button type="submit">Create</button>
             </form>
@@ -31,27 +37,42 @@
 
     </div>
 
-    <!-- RIGHT SIDE -->
     <div class="right">
         <div class="card">
-            <h3>Month</h3>
+            <h3>This Month</h3>
+
             <div class="calendar">
-                {% for i in range(30) %}
-                    <div class="day"></div>
+                {% for day in range(1, 32) %}
+                    <div class="day">
+                        <div class="day-number">{{ day }}</div>
+
+                        {% for appt in appointments %}
+                            {% if appt.date and appt.date.split('-')[-1]|int == day %}
+                                <div class="event-dot"></div>
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
                 {% endfor %}
             </div>
+
         </div>
     </div>
 
 </div>
 
 <style>
+
+.title {
+    font-family: 'Pacifico', cursive;
+    color: #80461B;
+}
+
 .main {
     display: flex;
     gap: 20px;
 }
 
-/* Layout */
 .left {
     width: 35%;
     display: flex;
@@ -63,7 +84,6 @@
     width: 65%;
 }
 
-/* Cards */
 .card {
     background: #fffaf5;
     border: 2px solid #80461B;
@@ -71,20 +91,70 @@
     padding: 15px;
 }
 
-/* Calendar */
+.empty {
+    color: #999;
+    font-style: italic;
+}
+
+.appt {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+}
+
+.appt:hover {
+    background: #fdf3ea;
+}
+
+.scroll-card {
+    max-height: 300px;   /* controls height */
+    overflow-y: auto;    /* enables vertical scroll */
+    padding-right: 5px;  /* space for scrollbar */
+}
+
+.scroll-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scroll-card::-webkit-scrollbar-thumb {
+    background: #80461B;
+    border-radius: 10px;
+}
+
+.scroll-card::-webkit-scrollbar-track {
+    background: #f5e6d8;
+}
+
 .calendar {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 10px;
     margin-top: 10px;
 }
 
 .day {
     border: 1px solid #80461B;
-    height: 80px;
+    height: 90px;
+    position: relative;
+    padding: 5px;
+    border-radius: 6px;
 }
 
-/* Inputs */
+.day-number {
+    font-size: 12px;
+    color: #80461B;
+}
+
+.event-dot {
+    width: 8px;
+    height: 8px;
+    background: #80461B;
+    border-radius: 50%;
+    margin-top: 5px;
+}
+
 input, textarea {
     width: 100%;
     margin: 6px 0;
@@ -93,7 +163,6 @@ input, textarea {
     border-radius: 4px;
 }
 
-/* Button */
 button {
     background: #80461B;
     color: white;
@@ -107,6 +176,7 @@ button {
 button:hover {
     background: #5a2f12;
 }
+
 </style>
 
 {% endblock %}

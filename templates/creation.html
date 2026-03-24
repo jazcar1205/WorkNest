@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1 style="font-family: 'Pacifico', cursive; color:#80461B;">Create Item</h1>
+<h1 class="title">Create Item</h1>
 
 <div class="container">
     <div class="row">
@@ -19,7 +19,7 @@
                 </select>
 
                 <label>Assigned</label>
-                <input type="text" name="assigned">
+                <input type="text" name="assigned" placeholder="Enter name">
 
                 <label>Day Created</label>
                 <input type="date" name="created">
@@ -28,17 +28,23 @@
                 <input type="date" name="due">
 
                 <label>Status</label>
-                <select name="status">
-                    <option>Open</option>
-                    <option>In Progress</option>
-                    <option>Completed</option>
+                <select name="status" id="statusSelect" onchange="updateStatusPreview()">
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
                 </select>
+
+                <!-- 🔥 Status Preview -->
+                <div class="preview">
+                    Preview:
+                    <span id="statusPreview" class="status open">Open</span>
+                </div>
         </div>
 
         <!-- RIGHT SIDE -->
         <div class="right">
                 <label>Description</label>
-                <textarea name="description"></textarea>
+                <textarea name="description" placeholder="Enter description..."></textarea>
 
                 <button type="submit">Create Item</button>
             </form>
@@ -47,7 +53,28 @@
     </div>
 </div>
 
+<script>
+function updateStatusPreview() {
+    const select = document.getElementById("statusSelect");
+    const preview = document.getElementById("statusPreview");
+
+    const value = select.value;
+    const className = value.toLowerCase().replace(" ", "-");
+
+    preview.className = "status " + className;
+    preview.innerText = value;
+}
+</script>
+
 <style>
+
+/* Title */
+.title {
+    font-family: 'Pacifico', cursive;
+    color: #80461B;
+}
+
+/* Container */
 .container {
     margin-top: 20px;
     background: #fffaf5;
@@ -56,6 +83,7 @@
     padding: 20px;
 }
 
+/* Layout */
 .row {
     display: flex;
     gap: 20px;
@@ -97,6 +125,39 @@ label {
     font-weight: bold;
     color: #80461B;
 }
+
+/* Status Preview */
+.preview {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* Status Badge */
+.status {
+    padding: 4px 10px;
+    border-radius: 8px;
+    margin-left: 10px;
+}
+
+/* Colors */
+.status.open {
+    background: #ffe5e5;
+    color: red;
+    font-weight: bold;
+}
+
+.status.in-progress {
+    background: #fff4e5;
+    color: orange;
+    font-weight: bold;
+}
+
+.status.completed {
+    background: #e6ffe6;
+    color: green;
+    font-weight: bold;
+}
+
 </style>
 
 {% endblock %}

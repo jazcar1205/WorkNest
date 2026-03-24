@@ -2,9 +2,14 @@
 
 {% block content %}
 
-<h1 style="font-family: 'Pacifico', cursive; color:#80461B;">Tickets</h1>
+<h1 class="title">{{ title }}</h1>
 
 <div class="container">
+
+    {% if items|length == 0 %}
+        <p class="empty">No {{ title.lower() }} yet. Create one 👀</p>
+    {% else %}
+
     <table>
         <tr>
             <th>#</th>
@@ -13,22 +18,170 @@
             <th>Assigned</th>
         </tr>
 
-        {% for ticket in tickets %}
-        <tr>
+        {% for item in items %}
+        <tr class="clickable-row"
+            data-id="{{ item._id }}"
+            data-description="{{ item.description }}"
+            data-status="{{ item.status }}"
+            data-assigned="{{ item.assigned }}"
+            data-created="{{ item.created }}"
+            data-due="{{ item.due }}"
+            onclick="openModal(this)">
+
             <td>{{ loop.index }}</td>
-            <td>{{ ticket.description }}</td>
+            <td>{{ item.description }}</td>
             <td>
-                <span class="status {{ ticket.status|lower }}">
-                    {{ ticket.status }}
+                <span class="status {{ item.status|lower|replace(' ', '-') }}">
+                    {{ item.status }}
                 </span>
             </td>
-            <td>{{ ticket.assigned }}</td>
+            <td>{{ item.assigned }}</td>
         </tr>
         {% endfor %}
     </table>
+
+    <!-- MODAL -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+
+            <input type="hidden" id="modal-id">
+
+            <label>Description:</label>
+            <input id="modal-title" disabled>
+
+            <label>Status:</label>
+            <select id="modal-status" disabled>
+                <option>Open</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+            </select>
+
+            <label>Assigned:</label>
+            <input id="modal-assigned" disabled>
+
+            <label>Created:</label>
+            <input id="modal-created" disabled>
+
+            <label>Due:</label>
+            <input id="modal-due" disabled>
+
+            <br><br>
+
+            <button onclick="enableEdit()">✏️ Edit</button>
+            <button onclick="saveEdit()">💾 Save</button>
+            <button class="delete-btn" onclick="deleteItem()">🗑 Delete</button>
+        </div>
+    </div>
+
+    <!-- JS -->
+    <script>
+    function openModal(row) {
+        document.getElementById("modal-id").value = row.dataset.id;
+
+        document.getElementById("modal-title").value = row.dataset.description || "";
+        document.getElementById("modal-status").value = row.dataset.status || "";
+        document.getElementById("modal-assigned").value = row.dataset.assigned || "";
+        document.getElementById("modal-created").value = row.dataset.created || "";
+        document.getElementById("modal-due").value = row.dataset.due || "";
+
+        disableFields();
+        document.getElementById("itemModal").style.display = "block";
+    }
+
+    function enableEdit() {
+        document.querySelectorAll("#itemModal input, #itemModal select")
+            .forEach(el => el.disabled = false);
+    }
+
+    function disableFields() {
+        document.querySelectorAll("#itemModal input, #itemModal select")
+            .forEach(el => el.disabled = true);
+    }
+
+    function closeModal() {
+        document.getElementById("itemModal").style.display = "none";
+    }
+
+    // SAVE EDIT
+    function saveEdit() {
+        const data = {
+            id: document.getElementById("modal-id").value,
+            description: document.getElementById("modal-title").value,
+            status: document.getElementById("modal-status").value,
+            assigned: document.getElementById("modal-assigned").value,
+            created: document.getElementById("modal-created").value,
+            due: document.getElementById("modal-due").value
+        };
+
+        console.log("Sending data:", data); // DEBUG
+
+        fetch("/update_item", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            console.log("Response status:", res.status);
+            return res.json();
+        })
+        .then(res => {
+            console.log("Response:", res);
+
+            if (res.success) {
+                alert("Updated successfully!");
+                location.reload();
+            } else {
+                alert("Update failed: " + JSON.stringify(res));
+            }
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            alert("Request failed — check console");
+        });
+    }
+
+    // DELETE ITEM
+    function deleteItem() {
+        const id = document.getElementById("modal-id").value;
+
+        if (!confirm("Are you sure you want to delete this item?")) return;
+
+        fetch("/delete_item", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id: id })
+        })
+        .then(res => res.json())
+        .then(res => {
+            alert("Item deleted!");
+            location.reload();
+        });
+    }
+
+    // Close when clicking outside modal
+    window.onclick = function(event) {
+        let modal = document.getElementById("itemModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+    </script>
+
+    {% endif %}
+
 </div>
 
 <style>
+.title {
+    font-family: 'Pacifico', cursive;
+    color: #80461B;
+}
+
 .container {
     margin-top: 20px;
     background: #fffaf5;
@@ -37,7 +190,12 @@
     padding: 20px;
 }
 
-/* Table */
+.empty {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -55,20 +213,78 @@ td {
     border-bottom: 1px solid #ddd;
 }
 
-/* Status colors */
+tr:hover {
+    background-color: #fdf3ea;
+}
+
+.clickable-row {
+    cursor: pointer;
+}
+
+/* Status styles */
+.status {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.9em;
+}
+
 .status.open {
+    background: #ffe5e5;
     color: red;
     font-weight: bold;
 }
 
-.status.in\ progress {
+.status.in-progress {
+    background: #fff4e5;
     color: orange;
     font-weight: bold;
 }
 
 .status.completed {
+    background: #e6ffe6;
     color: green;
     font-weight: bold;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: #fffaf5;
+    margin: 10% auto;
+    padding: 20px;
+    border: 2px solid #80461B;
+    border-radius: 12px;
+    width: 50%;
+}
+
+.close {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Delete button */
+.delete-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #cc0000;
 }
 </style>
 

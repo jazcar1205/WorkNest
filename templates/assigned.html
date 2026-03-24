@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1 style="font-family: 'Pacifico', cursive; color:#80461B;">Assigned Work</h1>
+<h1 class="title">Assigned Work</h1>
 
 <div class="container">
 
@@ -11,34 +11,58 @@
         <!-- Tickets -->
         <div class="column">
             <h2>Tickets</h2>
-            {% for item in tickets %}
-                <div class="item">
-                    <strong>{{ item.description }}</strong><br>
-                    <span class="status">{{ item.status }}</span>
-                </div>
-            {% endfor %}
+
+            {% if tickets|length == 0 %}
+                <p class="empty">No tickets</p>
+            {% else %}
+                {% for item in tickets %}
+                    <div class="item">
+                        <strong>{{ item.description }}</strong><br>
+                        <span class="status {{ item.status|lower|replace(' ', '-') }}">
+                            {{ item.status }}
+                        </span>
+                        <p class="assigned">👤 {{ item.assigned }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
 
         <!-- Requests -->
         <div class="column">
             <h2>Requests</h2>
-            {% for item in requests %}
-                <div class="item">
-                    <strong>{{ item.description }}</strong><br>
-                    <span class="status">{{ item.status }}</span>
-                </div>
-            {% endfor %}
+
+            {% if requests|length == 0 %}
+                <p class="empty">No requests</p>
+            {% else %}
+                {% for item in requests %}
+                    <div class="item">
+                        <strong>{{ item.description }}</strong><br>
+                        <span class="status {{ item.status|lower|replace(' ', '-') }}">
+                            {{ item.status }}
+                        </span>
+                        <p class="assigned">👤 {{ item.assigned }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
 
         <!-- Tasks -->
         <div class="column">
             <h2>Tasks</h2>
-            {% for item in tasks %}
-                <div class="item">
-                    <strong>{{ item.description }}</strong><br>
-                    <span class="status">{{ item.status }}</span>
-                </div>
-            {% endfor %}
+
+            {% if tasks|length == 0 %}
+                <p class="empty">No tasks</p>
+            {% else %}
+                {% for item in tasks %}
+                    <div class="item">
+                        <strong>{{ item.description }}</strong><br>
+                        <span class="status {{ item.status|lower|replace(' ', '-') }}">
+                            {{ item.status }}
+                        </span>
+                        <p class="assigned">👤 {{ item.assigned }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
 
     </div>
@@ -46,6 +70,14 @@
 </div>
 
 <style>
+
+/* Title */
+.title {
+    font-family: 'Pacifico', cursive;
+    color: #80461B;
+}
+
+/* Container */
 .container {
     margin-top: 20px;
     background: #fffaf5;
@@ -54,12 +86,13 @@
     padding: 20px;
 }
 
+/* Columns layout */
 .columns {
     display: flex;
     gap: 20px;
 }
 
-/* Columns */
+/* Each column */
 .column {
     flex: 1;
     background: #fffaf5;
@@ -70,25 +103,66 @@
     overflow-y: auto;
 }
 
-h2 {
+.column h2 {
     color: #80461B;
     margin-top: 0;
 }
 
+/* Empty message */
+.empty {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+}
+
 /* Items */
 .item {
+    background: white;
     padding: 10px;
-    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
 }
 
-.item:last-child {
-    border-bottom: none;
+.item:hover {
+    background: #fdf3ea;
 }
 
-.status {
+/* Assigned text */
+.assigned {
     font-size: 12px;
-    color: #555;
+    color: #666;
+    margin-top: 5px;
 }
+
+/* Status badge */
+.status {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+/* Status colors */
+.status.open {
+    background: #ffe5e5;
+    color: red;
+    font-weight: bold;
+}
+
+.status.in-progress {
+    background: #fff4e5;
+    color: orange;
+    font-weight: bold;
+}
+
+.status.completed {
+    background: #e6ffe6;
+    color: green;
+    font-weight: bold;
+}
+
 </style>
 
 {% endblock %}
