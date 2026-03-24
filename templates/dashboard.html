@@ -89,7 +89,7 @@
             </thead>
             <tbody>
             {% for item in recent_items %}
-            <tr>
+            <tr class="clickable-row" onclick="window.location='/assigned?open={{ item._id }}'">
                 <td><span class="type-badge {{ item.type_label|lower }}">{{ item.type_label }}</span></td>
                 <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ item.description }}</td>
                 <td><span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span></td>

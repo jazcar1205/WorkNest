@@ -23,7 +23,15 @@
                     <p class="empty" style="padding:20px 0">No tickets</p>
                 {% else %}
                     {% for item in tickets %}
-                    <div class="work-item">
+                    <div class="work-item"
+                         data-id="{{ item._id }}"
+                         data-type="Ticket"
+                         data-description="{{ item.description or '' }}"
+                         data-status="{{ item.status or '' }}"
+                         data-assigned="{{ item.assigned or '' }}"
+                         data-created="{{ item.created or '' }}"
+                         data-due="{{ item.due or '' }}"
+                         onclick="openWorkModal(this)">
                         <div class="work-item-desc">{{ item.description }}</div>
                         <div class="work-item-footer">
                             <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
@@ -45,7 +53,15 @@
                     <p class="empty" style="padding:20px 0">No requests</p>
                 {% else %}
                     {% for item in requests %}
-                    <div class="work-item">
+                    <div class="work-item"
+                         data-id="{{ item._id }}"
+                         data-type="Request"
+                         data-description="{{ item.description or '' }}"
+                         data-status="{{ item.status or '' }}"
+                         data-assigned="{{ item.assigned or '' }}"
+                         data-created="{{ item.created or '' }}"
+                         data-due="{{ item.due or '' }}"
+                         onclick="openWorkModal(this)">
                         <div class="work-item-desc">{{ item.description }}</div>
                         <div class="work-item-footer">
                             <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
@@ -67,7 +83,15 @@
                     <p class="empty" style="padding:20px 0">No tasks</p>
                 {% else %}
                     {% for item in tasks %}
-                    <div class="work-item">
+                    <div class="work-item"
+                         data-id="{{ item._id }}"
+                         data-type="Task"
+                         data-description="{{ item.description or '' }}"
+                         data-status="{{ item.status or '' }}"
+                         data-assigned="{{ item.assigned or '' }}"
+                         data-created="{{ item.created or '' }}"
+                         data-due="{{ item.due or '' }}"
+                         onclick="openWorkModal(this)">
                         <div class="work-item-desc">{{ item.description }}</div>
                         <div class="work-item-footer">
                             <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
@@ -81,6 +105,156 @@
 
     </div>
 </div>
+
+<!-- MODAL -->
+<div id="workModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h3 id="modal-heading">Item Details</h3>
+            </div>
+            <button class="modal-close" onclick="closeWorkModal()">&times;</button>
+        </div>
+
+        <input type="hidden" id="modal-id">
+
+        <label>Description <span class="req-star">*</span></label>
+        <input id="modal-title" disabled>
+
+        <label>Status</label>
+        <select id="modal-status" disabled>
+            <option>Open</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+        </select>
+
+        <label>Assigned <span class="req-star">*</span></label>
+        <input id="modal-assigned" disabled>
+
+        <div style="display:flex;gap:16px">
+            <div style="flex:1">
+                <label>Created <span class="req-star">*</span></label>
+                <input id="modal-created" disabled>
+            </div>
+            <div style="flex:1">
+                <label>Due Date</label>
+                <input id="modal-due" disabled>
+            </div>
+        </div>
+
+        <div id="modal-error" class="modal-error" style="display:none"></div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="enableEdit()">Edit</button>
+            <button class="btn btn-primary"   onclick="saveEdit()">Save Changes</button>
+            <button class="btn btn-danger"    onclick="deleteItem()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openWorkModal(el) {
+    document.getElementById('modal-id').value       = el.dataset.id;
+    document.getElementById('modal-title').value    = el.dataset.description || '';
+    document.getElementById('modal-status').value   = el.dataset.status || '';
+    document.getElementById('modal-assigned').value = el.dataset.assigned || '';
+    document.getElementById('modal-created').value  = el.dataset.created || '';
+    document.getElementById('modal-due').value      = el.dataset.due || '';
+    document.getElementById('modal-heading').textContent = (el.dataset.type || 'Item') + ' Details';
+    hideModalError();
+    disableFields();
+    document.getElementById('workModal').style.display = 'block';
+}
+
+function closeWorkModal() {
+    document.getElementById('workModal').style.display = 'none';
+    // Remove ?open= from URL without reloading
+    history.replaceState(null, '', window.location.pathname);
+}
+
+function enableEdit() {
+    document.querySelectorAll('#workModal input:not([type=hidden]), #workModal select')
+        .forEach(function(el) { el.disabled = false; });
+}
+
+function disableFields() {
+    document.querySelectorAll('#workModal input, #workModal select')
+        .forEach(function(el) { el.disabled = true; });
+}
+
+function showModalError(msg) {
+    const el = document.getElementById('modal-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideModalError() {
+    const el = document.getElementById('modal-error');
+    if (el) el.style.display = 'none';
+}
+
+function saveEdit() {
+    const desc     = document.getElementById('modal-title').value.trim();
+    const assigned = document.getElementById('modal-assigned').value.trim();
+    const created  = document.getElementById('modal-created').value.trim();
+
+    if (!desc || !assigned || !created) {
+        showModalError('Description, Assigned, and Created date are required.');
+        return;
+    }
+    hideModalError();
+
+    fetch('/update_item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id:          document.getElementById('modal-id').value,
+            description: desc,
+            status:      document.getElementById('modal-status').value,
+            assigned:    assigned,
+            created:     created,
+            due:         document.getElementById('modal-due').value
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(r) {
+        if (r.success) location.reload();
+        else showModalError('Update failed. Please try again.');
+    });
+}
+
+function deleteItem() {
+    if (!confirm('Delete this item?')) return;
+    fetch('/delete_item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: document.getElementById('modal-id').value })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() { location.reload(); });
+}
+
+window.onclick = function(e) {
+    const m = document.getElementById('workModal');
+    if (e.target === m) {
+        m.style.display = 'none';
+        history.replaceState(null, '', window.location.pathname);
+    }
+};
+
+// Auto-open if arriving from dashboard with ?open=<id>
+document.addEventListener('DOMContentLoaded', function() {
+    const openId = new URLSearchParams(window.location.search).get('open');
+    if (openId) {
+        const el = document.querySelector('[data-id="' + openId + '"]');
+        if (el) {
+            // Scroll the column into view then open
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            setTimeout(function() { openWorkModal(el); }, 150);
+        }
+    }
+});
+</script>
 
 <style>
 /* ── Page fills viewport ─────────────────────────── */
@@ -102,7 +276,6 @@
     flex-shrink: 0;
 }
 
-/* Columns row fills remaining space */
 .work-columns {
     display: flex;
     gap: 16px;
@@ -110,7 +283,6 @@
     min-height: 0;
 }
 
-/* Each column is a flex card that fills height */
 .work-col {
     flex: 1;
     background: var(--white);
@@ -150,7 +322,6 @@
     border-radius: 20px;
 }
 
-/* Scrollable body inside each column */
 .work-col-body {
     flex: 1;
     overflow-y: auto;
@@ -167,10 +338,11 @@
     padding: 11px 13px;
     margin-bottom: 8px;
     background: var(--white);
-    transition: background 0.1s;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.12s;
 }
 .work-item:last-child { margin-bottom: 0; }
-.work-item:hover { background: #FDF7F0; }
+.work-item:hover { background: #FDF7F0; border-color: var(--brown-mid); }
 
 .work-item-desc {
     font-size: 13px;
@@ -187,9 +359,19 @@
     gap: 8px;
 }
 
-.work-person {
-    font-size: 11.5px;
-    color: var(--text-muted);
+.work-person { font-size: 11.5px; color: var(--text-muted); }
+
+/* Modal extras */
+.req-star { color: #DC2626; }
+
+.modal-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    border-radius: 7px;
+    padding: 9px 13px;
+    font-size: 13px;
+    margin-bottom: 4px;
 }
 </style>
 
