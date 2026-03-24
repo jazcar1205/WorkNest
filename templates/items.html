@@ -2,49 +2,91 @@
 
 {% block content %}
 
-<div class="page-header">
-    <h1 class="page-title">{{ title }}</h1>
-    <p class="page-subtitle">{{ items|length }} item{{ 's' if items|length != 1 else '' }}</p>
+<div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between">
+    <div>
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-subtitle" id="resultCount"></p>
+    </div>
+    <a href="/create" class="btn btn-primary" style="margin-bottom:2px">+ New</a>
 </div>
 
-<div class="section-card" style="padding:0;overflow:hidden">
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <div class="search-wrap">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by description or assignee…" oninput="onFilter()">
+    </div>
+    <select id="statusFilter" class="filter-select" onchange="onFilter()">
+        <option value="">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+    </select>
+</div>
 
-    {% if items|length == 0 %}
+{% if items|length == 0 %}
+    <div class="section-card">
         <p class="empty">No {{ title.lower() }} yet. <a href="/create" style="color:var(--brown);text-decoration:none;font-weight:600">Create one</a>.</p>
-    {% else %}
+    </div>
+{% else %}
 
-    <table>
-        <thead>
-        <tr>
-            <th style="width:44px">#</th>
-            <th>Description</th>
-            <th style="width:130px">Status</th>
-            <th style="width:150px">Assigned</th>
-            <th style="width:110px">Due</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in items %}
-        <tr class="clickable-row"
-            data-id="{{ item._id }}"
-            data-description="{{ item.description }}"
-            data-status="{{ item.status }}"
-            data-assigned="{{ item.assigned }}"
-            data-created="{{ item.created }}"
-            data-due="{{ item.due }}"
-            onclick="openModal(this)">
-            <td style="color:var(--text-light);font-size:12px">{{ loop.index }}</td>
-            <td>{{ item.description }}</td>
-            <td><span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span></td>
-            <td style="color:var(--text-muted)">{{ item.assigned or '—' }}</td>
-            <td style="color:var(--text-muted)">{{ item.due or '—' }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<!-- CARD GRID (all cards rendered; JS controls visibility) -->
+<div id="itemGrid" class="item-grid">
+    {% for item in items %}
+    <div class="item-card"
+         data-id="{{ item._id }}"
+         data-description="{{ item.description }}"
+         data-status="{{ item.status }}"
+         data-assigned="{{ item.assigned or '' }}"
+         data-created="{{ item.created or '' }}"
+         data-due="{{ item.due or '' }}"
+         onclick="openModal(this)">
 
-    {% endif %}
+        <div class="card-top">
+            <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+        </div>
+
+        <div class="card-desc">{{ item.description }}</div>
+
+        <div class="card-footer">
+            <span class="card-meta">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                {{ item.assigned or '—' }}
+            </span>
+            <span class="card-meta">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{ item.due or '—' }}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
 </div>
+
+<!-- EMPTY SEARCH STATE -->
+<div id="emptySearch" class="section-card" style="display:none">
+    <p class="empty">No items match your search.</p>
+</div>
+
+<!-- PAGINATION -->
+<div class="pagination-bar">
+    <button id="prevBtn" class="page-btn" onclick="prevPage()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Prev
+    </button>
+    <span id="pageInfo" class="page-info"></span>
+    <button id="nextBtn" class="page-btn" onclick="nextPage()">
+        Next
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+</div>
+
+{% endif %}
 
 <!-- MODAL -->
 <div id="itemModal" class="modal">
@@ -82,75 +124,307 @@
 
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="enableEdit()">Edit</button>
-            <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
-            <button class="btn btn-danger" onclick="deleteItem()">Delete</button>
+            <button class="btn btn-primary"   onclick="saveEdit()">Save Changes</button>
+            <button class="btn btn-danger"    onclick="deleteItem()">Delete</button>
         </div>
     </div>
 </div>
 
 <script>
+// ── Pagination ─────────────────────────────────────
+const PER_PAGE = 9;
+let currentPage = 1;
+let filtered = [];
+
+function allCards() {
+    return Array.from(document.querySelectorAll('.item-card'));
+}
+
+function onFilter() {
+    currentPage = 1;
+    renderPage();
+}
+
+function getFiltered() {
+    const q      = (document.getElementById('searchInput').value || '').toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    return allCards().filter(function(card) {
+        const matchQ = !q ||
+            card.dataset.description.toLowerCase().includes(q) ||
+            card.dataset.assigned.toLowerCase().includes(q);
+        const matchS = !status || card.dataset.status === status;
+        return matchQ && matchS;
+    });
+}
+
+function renderPage() {
+    filtered = getFiltered();
+    const total      = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+    currentPage      = Math.min(currentPage, totalPages);
+    const start      = (currentPage - 1) * PER_PAGE;
+    const end        = start + PER_PAGE;
+
+    // Hide all, show slice
+    allCards().forEach(function(c) { c.style.display = 'none'; });
+    filtered.slice(start, end).forEach(function(c) { c.style.display = 'flex'; });
+
+    // Empty search message
+    document.getElementById('emptySearch').style.display = total === 0 ? 'block' : 'none';
+    document.getElementById('itemGrid').style.display    = total === 0 ? 'none'  : 'grid';
+
+    // Counts and page label
+    const showing = Math.min(PER_PAGE, total - start);
+    document.getElementById('resultCount').textContent =
+        total === 0 ? 'No results' :
+        `Showing ${start + 1}–${start + showing} of ${total} item${total !== 1 ? 's' : ''}`;
+
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prevBtn').disabled = currentPage === 1;
+    document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+}
+
+function prevPage() { if (currentPage > 1) { currentPage--; renderPage(); } }
+function nextPage() {
+    if (currentPage < Math.ceil(filtered.length / PER_PAGE)) { currentPage++; renderPage(); }
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', renderPage);
+
+// ── Modal ──────────────────────────────────────────
 function openModal(row) {
-    document.getElementById("modal-id").value        = row.dataset.id;
-    document.getElementById("modal-title").value     = row.dataset.description || "";
-    document.getElementById("modal-status").value    = row.dataset.status || "";
-    document.getElementById("modal-assigned").value  = row.dataset.assigned || "";
-    document.getElementById("modal-created").value   = row.dataset.created || "";
-    document.getElementById("modal-due").value       = row.dataset.due || "";
+    document.getElementById('modal-id').value      = row.dataset.id;
+    document.getElementById('modal-title').value   = row.dataset.description || '';
+    document.getElementById('modal-status').value  = row.dataset.status || '';
+    document.getElementById('modal-assigned').value= row.dataset.assigned || '';
+    document.getElementById('modal-created').value = row.dataset.created || '';
+    document.getElementById('modal-due').value     = row.dataset.due || '';
     disableFields();
-    document.getElementById("itemModal").style.display = "block";
+    document.getElementById('itemModal').style.display = 'block';
 }
 
 function enableEdit() {
-    document.querySelectorAll("#itemModal input:not([type=hidden]), #itemModal select")
-        .forEach(el => el.disabled = false);
+    document.querySelectorAll('#itemModal input:not([type=hidden]), #itemModal select')
+        .forEach(function(el) { el.disabled = false; });
 }
 
 function disableFields() {
-    document.querySelectorAll("#itemModal input, #itemModal select")
-        .forEach(el => el.disabled = true);
+    document.querySelectorAll('#itemModal input, #itemModal select')
+        .forEach(function(el) { el.disabled = true; });
 }
 
 function closeModal() {
-    document.getElementById("itemModal").style.display = "none";
+    document.getElementById('itemModal').style.display = 'none';
 }
 
 function saveEdit() {
     const data = {
-        id:          document.getElementById("modal-id").value,
-        description: document.getElementById("modal-title").value,
-        status:      document.getElementById("modal-status").value,
-        assigned:    document.getElementById("modal-assigned").value,
-        created:     document.getElementById("modal-created").value,
-        due:         document.getElementById("modal-due").value
+        id:          document.getElementById('modal-id').value,
+        description: document.getElementById('modal-title').value,
+        status:      document.getElementById('modal-status').value,
+        assigned:    document.getElementById('modal-assigned').value,
+        created:     document.getElementById('modal-created').value,
+        due:         document.getElementById('modal-due').value
     };
-
-    fetch("/update_item", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+    fetch('/update_item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(res => {
-        if (res.success) { location.reload(); }
-        else { alert("Update failed: " + JSON.stringify(res)); }
+    .then(function(r) { return r.json(); })
+    .then(function(r) {
+        if (r.success) location.reload();
+        else alert('Update failed: ' + JSON.stringify(r));
     });
 }
 
 function deleteItem() {
-    if (!confirm("Delete this item?")) return;
-    fetch("/delete_item", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: document.getElementById("modal-id").value })
+    if (!confirm('Delete this item?')) return;
+    fetch('/delete_item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: document.getElementById('modal-id').value })
     })
-    .then(res => res.json())
-    .then(() => location.reload());
+    .then(function(r) { return r.json(); })
+    .then(function() { location.reload(); });
 }
 
 window.onclick = function(e) {
-    const modal = document.getElementById("itemModal");
-    if (e.target === modal) modal.style.display = "none";
+    const m = document.getElementById('itemModal');
+    if (e.target === m) m.style.display = 'none';
 };
 </script>
+
+<style>
+/* Filter bar */
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.search-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 9px 12px 9px 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    background: var(--white);
+    color: var(--text);
+    outline: none;
+    margin: 0;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-input:focus {
+    border-color: var(--brown-mid);
+    box-shadow: 0 0 0 3px rgba(200,121,65,0.12);
+}
+
+.filter-select {
+    width: 160px;
+    margin: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13.5px;
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+}
+
+.filter-select:focus {
+    border-color: var(--brown-mid);
+    box-shadow: 0 0 0 3px rgba(200,121,65,0.12);
+}
+
+/* Card grid */
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+/* Fixed-size card */
+.item-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    height: 138px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.12s, box-shadow 0.12s, transform 0.1s;
+    overflow: hidden;
+}
+
+.item-card:hover {
+    border-color: var(--brown-mid);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.card-top {
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.card-desc {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.45;
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.card-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Pagination */
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 4px 0 8px;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--white);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    box-shadow: var(--shadow-sm);
+}
+
+.page-btn:hover:not(:disabled) {
+    background: #F8F2EC;
+    border-color: var(--brown-mid);
+}
+
+.page-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.page-info {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 110px;
+    text-align: center;
+}
+</style>
 
 {% endblock %}
