@@ -4,92 +4,74 @@
 
 <h1 class="title">Dashboard</h1>
 
-<div class="row">
+<div class="dash-row">
 
-    <div class="card open">
-        <h3>Open Tasks</h3>
-        <p>{{ open_tasks }}</p>
+    <div class="dash-card open">
+        <div class="dash-label">Open Tasks</div>
+        <div class="dash-number">{{ open_tasks }}</div>
     </div>
 
-    <div class="card progress">
-        <h3>In Progress</h3>
-        <p>{{ in_progress }}</p>
+    <div class="dash-card progress">
+        <div class="dash-label">In Progress</div>
+        <div class="dash-number">{{ in_progress }}</div>
     </div>
 
-    <div class="card request">
-        <h3>Open Requests</h3>
-        <p>{{ open_requests }}</p>
+    <div class="dash-card request">
+        <div class="dash-label">Open Requests</div>
+        <div class="dash-number">{{ open_requests }}</div>
     </div>
 
-    <div class="card ticket">
-        <h3>Open Tickets</h3>
-        <p>{{ open_tickets }}</p>
+    <div class="dash-card ticket">
+        <div class="dash-label">Open Tickets</div>
+        <div class="dash-number">{{ open_tickets }}</div>
     </div>
 
-    <div class="card completed">
-        <h3>Completed</h3>
-        <p>{{ completed }}</p>
+    <div class="dash-card completed">
+        <div class="dash-label">Completed</div>
+        <div class="dash-number">{{ completed }}</div>
     </div>
 
 </div>
 
 <style>
-
-/* Title */
-.title {
-    font-family: 'Pacifico', cursive;
-    color: #80461B;
-}
-
-/* Layout */
-.row {
+.dash-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 20px;
+    gap: 18px;
+    margin-top: 8px;
 }
 
-/* Cards */
-.card {
-    flex: 1 1 200px;
-    background: #fffaf5;
+.dash-card {
+    flex: 1 1 160px;
+    background: var(--cream);
     border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    border: 2px solid #80461B;
+    padding: 24px 20px;
+    border: 1px solid var(--border);
+    border-left-width: 5px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.card h3 {
+.dash-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
     margin-bottom: 10px;
 }
 
-.card p {
-    font-size: 28px;
-    font-weight: bold;
+.dash-number {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
 }
 
-/* Status Colors */
-.card.open {
-    border-left: 6px solid red;
-}
-
-.card.progress {
-    border-left: 6px solid orange;
-}
-
-.card.completed {
-    border-left: 6px solid green;
-}
-
-/* Optional category colors */
-.card.request {
-    border-left: 6px solid #6a5acd;
-}
-
-.card.ticket {
-    border-left: 6px solid #008b8b;
-}
-
+.dash-card.open      { border-left-color: #b91c1c; }
+.dash-card.progress  { border-left-color: #d97706; }
+.dash-card.request   { border-left-color: #6d28d9; }
+.dash-card.ticket    { border-left-color: #0e7490; }
+.dash-card.completed { border-left-color: #166534; }
 </style>
 
 {% endblock %}

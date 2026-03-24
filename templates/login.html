@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Welcome - WorkNest</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkNest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            font-family: Courier New;
-            background: #EADDCA;
+            font-family: 'Inter', sans-serif;
+            background: #F5E6D3;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -14,42 +17,51 @@
         }
 
         .card {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
+            background: #fffaf5;
+            padding: 48px 52px;
+            border-radius: 16px;
             text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid #dcc9b0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 380px;
+            width: 90%;
         }
 
-        h1 {
-            margin-bottom: 10px;
+        .logo {
+            font-family: 'Pacifico', cursive;
+            color: #80461B;
+            font-size: 32px;
+            margin-bottom: 8px;
         }
 
         p {
-            color: #555;
+            color: #8a6a50;
+            margin: 0 0 28px 0;
+            font-size: 14px;
         }
 
         .btn {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #2c3e50;
+            padding: 11px 32px;
+            background: #80461B;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.15s;
         }
 
         .btn:hover {
-            background: #1a252f;
+            background: #5a2f12;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>🎉 Welcome!</h1>
-    <p>You have successfully logged in.</p>
-
+    <div class="logo">WorkNest</div>
+    <p>Your unified work management hub</p>
     <a href="/Dashboard" class="btn">Go to Dashboard</a>
 </div>
 

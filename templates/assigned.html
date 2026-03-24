@@ -2,167 +2,128 @@
 
 {% block content %}
 
-<h1 class="title">Assigned Work</h1>
+<h1 class="title">My Work</h1>
 
-<div class="container">
+<div class="columns">
 
-    <div class="columns">
+    <!-- Tickets -->
+    <div class="work-col">
+        <div class="col-header">Tickets</div>
 
-        <!-- Tickets -->
-        <div class="column">
-            <h2>Tickets</h2>
-
-            {% if tickets|length == 0 %}
-                <p class="empty">No tickets</p>
-            {% else %}
-                {% for item in tickets %}
-                    <div class="item">
-                        <strong>{{ item.description }}</strong><br>
-                        <span class="status {{ item.status|lower|replace(' ', '-') }}">
-                            {{ item.status }}
-                        </span>
-                        <p class="assigned">👤 {{ item.assigned }}</p>
+        {% if tickets|length == 0 %}
+            <p class="empty">No tickets</p>
+        {% else %}
+            {% for item in tickets %}
+                <div class="work-item">
+                    <div class="item-desc">{{ item.description }}</div>
+                    <div class="item-footer">
+                        <span class="status {{ item.status|lower|replace(' ', '-') }}">{{ item.status }}</span>
+                        <span class="item-person">{{ item.assigned }}</span>
                     </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-        <!-- Requests -->
-        <div class="column">
-            <h2>Requests</h2>
+    <!-- Requests -->
+    <div class="work-col">
+        <div class="col-header">Requests</div>
 
-            {% if requests|length == 0 %}
-                <p class="empty">No requests</p>
-            {% else %}
-                {% for item in requests %}
-                    <div class="item">
-                        <strong>{{ item.description }}</strong><br>
-                        <span class="status {{ item.status|lower|replace(' ', '-') }}">
-                            {{ item.status }}
-                        </span>
-                        <p class="assigned">👤 {{ item.assigned }}</p>
+        {% if requests|length == 0 %}
+            <p class="empty">No requests</p>
+        {% else %}
+            {% for item in requests %}
+                <div class="work-item">
+                    <div class="item-desc">{{ item.description }}</div>
+                    <div class="item-footer">
+                        <span class="status {{ item.status|lower|replace(' ', '-') }}">{{ item.status }}</span>
+                        <span class="item-person">{{ item.assigned }}</span>
                     </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-        <!-- Tasks -->
-        <div class="column">
-            <h2>Tasks</h2>
+    <!-- Tasks -->
+    <div class="work-col">
+        <div class="col-header">Tasks</div>
 
-            {% if tasks|length == 0 %}
-                <p class="empty">No tasks</p>
-            {% else %}
-                {% for item in tasks %}
-                    <div class="item">
-                        <strong>{{ item.description }}</strong><br>
-                        <span class="status {{ item.status|lower|replace(' ', '-') }}">
-                            {{ item.status }}
-                        </span>
-                        <p class="assigned">👤 {{ item.assigned }}</p>
+        {% if tasks|length == 0 %}
+            <p class="empty">No tasks</p>
+        {% else %}
+            {% for item in tasks %}
+                <div class="work-item">
+                    <div class="item-desc">{{ item.description }}</div>
+                    <div class="item-footer">
+                        <span class="status {{ item.status|lower|replace(' ', '-') }}">{{ item.status }}</span>
+                        <span class="item-person">{{ item.assigned }}</span>
                     </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
 </div>
 
 <style>
-
-/* Title */
-.title {
-    font-family: 'Pacifico', cursive;
-    color: #80461B;
-}
-
-/* Container */
-.container {
-    margin-top: 20px;
-    background: #fffaf5;
-    border: 2px solid #80461B;
-    border-radius: 12px;
-    padding: 20px;
-}
-
-/* Columns layout */
 .columns {
     display: flex;
-    gap: 20px;
+    gap: 18px;
+    align-items: flex-start;
 }
 
-/* Each column */
-.column {
+.work-col {
     flex: 1;
-    background: #fffaf5;
-    border: 2px solid #80461B;
+    background: var(--cream);
+    border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 15px;
-    height: 400px;
+    padding: 18px;
+    max-height: 520px;
     overflow-y: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.column h2 {
-    color: #80461B;
-    margin-top: 0;
+.work-col::-webkit-scrollbar { width: 5px; }
+.work-col::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+.col-header {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--brown);
+    margin-bottom: 14px;
 }
 
-/* Empty message */
-.empty {
-    color: #999;
-    font-style: italic;
-    text-align: center;
-}
-
-/* Items */
-.item {
+.work-item {
     background: white;
-    padding: 10px;
-    margin-bottom: 10px;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    border: 1px solid #ddd;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: background 0.1s;
 }
 
-.item:hover {
-    background: #fdf3ea;
+.work-item:last-child { margin-bottom: 0; }
+.work-item:hover { background: #fdf0e4; }
+
+.item-desc {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
 }
 
-/* Assigned text */
-.assigned {
+.item-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.item-person {
     font-size: 12px;
-    color: #666;
-    margin-top: 5px;
+    color: var(--text-muted);
 }
-
-/* Status badge */
-.status {
-    display: inline-block;
-    margin-top: 5px;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-}
-
-/* Status colors */
-.status.open {
-    background: #ffe5e5;
-    color: red;
-    font-weight: bold;
-}
-
-.status.in-progress {
-    background: #fff4e5;
-    color: orange;
-    font-weight: bold;
-}
-
-.status.completed {
-    background: #e6ffe6;
-    color: green;
-    font-weight: bold;
-}
-
 </style>
 
 {% endblock %}

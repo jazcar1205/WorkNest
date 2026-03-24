@@ -4,13 +4,12 @@
 
 <h1 class="title">Create Item</h1>
 
-<div class="container">
-    <div class="row">
+<div class="container" style="max-width:720px">
+    <form method="POST" action="/create_item">
+        <div class="form-row">
 
-        <!-- LEFT SIDE -->
-        <div class="left">
-            <form method="POST" action="/create_item">
-
+            <!-- LEFT -->
+            <div class="form-col">
                 <label>Type</label>
                 <select name="type">
                     <option>Task</option>
@@ -18,7 +17,7 @@
                     <option>Ticket</option>
                 </select>
 
-                <label>Assigned</label>
+                <label>Assigned To</label>
                 <input type="text" name="assigned" placeholder="Enter name">
 
                 <label>Day Created</label>
@@ -34,130 +33,50 @@
                     <option value="Completed">Completed</option>
                 </select>
 
-                <!-- 🔥 Status Preview -->
-                <div class="preview">
-                    Preview:
+                <div class="preview-row">
+                    <span style="font-size:13px;color:var(--text-muted)">Preview:</span>
                     <span id="statusPreview" class="status open">Open</span>
                 </div>
-        </div>
+            </div>
 
-        <!-- RIGHT SIDE -->
-        <div class="right">
+            <!-- RIGHT -->
+            <div class="form-col">
                 <label>Description</label>
-                <textarea name="description" placeholder="Enter description..."></textarea>
+                <textarea name="description" placeholder="Describe the item..." style="height:180px"></textarea>
 
-                <button type="submit">Create Item</button>
-            </form>
+                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px">Create Item</button>
+            </div>
+
         </div>
-
-    </div>
+    </form>
 </div>
 
 <script>
 function updateStatusPreview() {
     const select = document.getElementById("statusSelect");
     const preview = document.getElementById("statusPreview");
-
-    const value = select.value;
-    const className = value.toLowerCase().replace(" ", "-");
-
+    const className = select.value.toLowerCase().replace(" ", "-");
     preview.className = "status " + className;
-    preview.innerText = value;
+    preview.innerText = select.value;
 }
 </script>
 
 <style>
-
-/* Title */
-.title {
-    font-family: 'Pacifico', cursive;
-    color: #80461B;
-}
-
-/* Container */
-.container {
-    margin-top: 20px;
-    background: #fffaf5;
-    border: 2px solid #80461B;
-    border-radius: 12px;
-    padding: 20px;
-}
-
-/* Layout */
-.row {
+.form-row {
     display: flex;
-    gap: 20px;
+    gap: 28px;
 }
 
-.left, .right {
-    width: 50%;
+.form-col {
+    flex: 1;
 }
 
-/* Inputs */
-input, select, textarea {
-    width: 100%;
-    padding: 8px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+.preview-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
 }
-
-textarea {
-    height: 120px;
-}
-
-/* Button */
-button {
-    background: #80461B;
-    color: white;
-    border: none;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #5a2f12;
-}
-
-label {
-    font-weight: bold;
-    color: #80461B;
-}
-
-/* Status Preview */
-.preview {
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-/* Status Badge */
-.status {
-    padding: 4px 10px;
-    border-radius: 8px;
-    margin-left: 10px;
-}
-
-/* Colors */
-.status.open {
-    background: #ffe5e5;
-    color: red;
-    font-weight: bold;
-}
-
-.status.in-progress {
-    background: #fff4e5;
-    color: orange;
-    font-weight: bold;
-}
-
-.status.completed {
-    background: #e6ffe6;
-    color: green;
-    font-weight: bold;
-}
-
 </style>
 
 {% endblock %}

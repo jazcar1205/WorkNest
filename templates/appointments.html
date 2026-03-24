@@ -4,179 +4,159 @@
 
 <h1 class="title">Appointments</h1>
 
-<div class="main">
+<div class="appt-layout">
 
-    <div class="left">
+    <div class="appt-left">
 
         <div class="card scroll-card">
-            <h3>Upcoming</h3>
+            <h3 class="section-heading">Upcoming</h3>
 
             {% if appointments|length == 0 %}
-                <p class="empty">No upcoming appointments</p>
+                <p class="empty">No upcoming appointments.</p>
             {% else %}
                 {% for appt in appointments %}
-                    <div class="appt">
-                        <strong>{{ appt.date }} {{ appt.time }}</strong><br>
-                        <span>{{ appt.description }}</span><br>
-                        <small>👤 {{ appt.invite }}</small>
+                    <div class="appt-item">
+                        <div class="appt-date">{{ appt.date }} &middot; {{ appt.time }}</div>
+                        <div class="appt-desc">{{ appt.description }}</div>
+                        <div class="appt-person">{{ appt.invite }}</div>
                     </div>
                 {% endfor %}
             {% endif %}
         </div>
 
         <div class="card">
-            <h3>Create Appointment</h3>
+            <h3 class="section-heading">New Appointment</h3>
             <form method="POST" action="/create_appointment">
+                <label>Date</label>
                 <input type="date" name="date" required>
-                <input type="text" name="time" placeholder="Time (e.g. 2:00 PM)">
-                <input type="text" name="invite" placeholder="Invite person">
-                <textarea name="description" placeholder="Description"></textarea>
-                <button type="submit">Create</button>
+
+                <label>Time</label>
+                <input type="text" name="time" placeholder="e.g. 2:00 PM">
+
+                <label>Invite</label>
+                <input type="text" name="invite" placeholder="Person's name">
+
+                <label>Description</label>
+                <textarea name="description" placeholder="What's this about?" style="height:80px"></textarea>
+
+                <button type="submit" class="btn btn-primary" style="width:100%">Create</button>
             </form>
         </div>
 
     </div>
 
-    <div class="right">
+    <div class="appt-right">
         <div class="card">
-            <h3>This Month</h3>
-
+            <h3 class="section-heading">This Month</h3>
             <div class="calendar">
                 {% for day in range(1, 32) %}
-                    <div class="day">
-                        <div class="day-number">{{ day }}</div>
-
+                    <div class="cal-day">
+                        <div class="cal-num">{{ day }}</div>
                         {% for appt in appointments %}
                             {% if appt.date and appt.date.split('-')[-1]|int == day %}
                                 <div class="event-dot"></div>
                             {% endif %}
                         {% endfor %}
-
                     </div>
                 {% endfor %}
             </div>
-
         </div>
     </div>
 
 </div>
 
 <style>
-
-.title {
-    font-family: 'Pacifico', cursive;
-    color: #80461B;
-}
-
-.main {
+.appt-layout {
     display: flex;
     gap: 20px;
+    align-items: flex-start;
 }
 
-.left {
-    width: 35%;
+.appt-left {
+    width: 34%;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 
-.right {
-    width: 65%;
+.appt-right {
+    flex: 1;
 }
 
-.card {
-    background: #fffaf5;
-    border: 2px solid #80461B;
-    border-radius: 12px;
-    padding: 15px;
+.section-heading {
+    margin: 0 0 14px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brown);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.empty {
-    color: #999;
-    font-style: italic;
-}
-
-.appt {
+.appt-item {
     background: white;
-    padding: 10px;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
+    padding: 10px 12px;
+    margin-bottom: 8px;
 }
 
-.appt:hover {
-    background: #fdf3ea;
+.appt-item:last-child { margin-bottom: 0; }
+
+.appt-date {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 3px;
+}
+
+.appt-desc {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.appt-person {
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
 .scroll-card {
-    max-height: 300px;   /* controls height */
-    overflow-y: auto;    /* enables vertical scroll */
-    padding-right: 5px;  /* space for scrollbar */
+    max-height: 280px;
+    overflow-y: auto;
 }
 
-.scroll-card::-webkit-scrollbar {
-    width: 6px;
-}
-
-.scroll-card::-webkit-scrollbar-thumb {
-    background: #80461B;
-    border-radius: 10px;
-}
-
-.scroll-card::-webkit-scrollbar-track {
-    background: #f5e6d8;
-}
+.scroll-card::-webkit-scrollbar { width: 5px; }
+.scroll-card::-webkit-scrollbar-thumb { background: var(--brown-mid); border-radius: 10px; }
+.scroll-card::-webkit-scrollbar-track { background: transparent; }
 
 .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-    margin-top: 10px;
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.day {
-    border: 1px solid #80461B;
-    height: 90px;
-    position: relative;
-    padding: 5px;
+.cal-day {
+    border: 1px solid var(--border);
     border-radius: 6px;
+    height: 72px;
+    padding: 5px 6px;
+    background: white;
 }
 
-.day-number {
-    font-size: 12px;
-    color: #80461B;
+.cal-num {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
 }
 
 .event-dot {
-    width: 8px;
-    height: 8px;
-    background: #80461B;
+    width: 7px;
+    height: 7px;
+    background: var(--brown);
     border-radius: 50%;
-    margin-top: 5px;
+    margin-top: 6px;
 }
-
-input, textarea {
-    width: 100%;
-    margin: 6px 0;
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-button {
-    background: #80461B;
-    color: white;
-    border: none;
-    padding: 8px;
-    margin-top: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #5a2f12;
-}
-
 </style>
 
 {% endblock %}
