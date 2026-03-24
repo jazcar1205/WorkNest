@@ -114,7 +114,14 @@
         </select>
 
         <label>Assigned <span class="req-star">*</span></label>
-        <input id="modal-assigned" required disabled>
+        <input id="modal-assigned" list="assignable-list" required disabled>
+        {% if assignable_users %}
+        <datalist id="assignable-list">
+            {% for u in assignable_users %}
+            <option value="{{ u }}">
+            {% endfor %}
+        </datalist>
+        {% endif %}
 
         <div style="display:flex;gap:16px">
             <div style="flex:1">

@@ -408,6 +408,71 @@
             padding: 36px 0;
             font-size: 13.5px;
         }
+
+        /* ── USER WIDGET ─────────────────────────────── */
+        .user-widget {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px 10px;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--brown-mid);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #F0E4D0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .role-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 1px 7px;
+            border-radius: 20px;
+            background: rgba(200,121,65,0.22);
+            color: #C87941;
+        }
+
+        .role-badge.role-admin { background: rgba(200,121,65,0.28); color: #F5A15A; }
+        .role-badge.role-user  { background: rgba(100,160,100,0.22); color: #6BAE6B; }
+        .role-badge.role-low   { background: rgba(160,160,200,0.22); color: #9898CC; }
+
+        /* ── LOGOUT ITEM ─────────────────────────────── */
+        .logout-item {
+            margin-top: 8px;
+            color: #7A5040 !important;
+        }
+
+        .logout-item:hover {
+            background: rgba(220,38,38,0.08) !important;
+            color: #EF8080 !important;
+        }
     </style>
 </head>
 <body>
@@ -417,6 +482,15 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <a href="/Dashboard" class="sidebar-logo">WorkNest</a>
+
+        <!-- USER WIDGET -->
+        <div class="user-widget">
+            <div class="user-avatar">{{ current_username[0]|upper if current_username else '?' }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ current_username }}</div>
+                <span class="role-badge role-{{ current_role }}">{{ current_role|capitalize }}</span>
+            </div>
+        </div>
 
         <hr class="sidebar-divider">
 
@@ -480,6 +554,14 @@
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 New Item
+            </a>
+            <a href="/logout" class="nav-item logout-item">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sign Out
             </a>
         </div>
     </aside>

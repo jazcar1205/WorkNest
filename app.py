@@ -1,9 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from functools import wraps
 from pymongo import MongoClient
 from datetime import datetime
 from bson.objectid import ObjectId
+from werkzeug.security import generate_password_hash, check_password_hash
 import calendar as cal_module
+
 app = Flask(__name__)
+app.secret_key = "worknest-secret-2024"
 
 client = MongoClient("mongodb+srv://jazcarlos4_db_user:kSfIBaCBdX0ay29n@type-db.u1wzklp.mongodb.net/?appName=type-db")
 db = client["type-db"]
@@ -11,28 +15,241 @@ ap_collection = db["appointments"]
 task_collection = db["tasks"]
 req_collection = db["requests"]
 tick_collection = db["tickets"]
+users_collection = db["users"]
 
+
+# ── Auth helpers ──────────────────────────────────────────────────────────────
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "username" not in session:
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.context_processor
+def inject_user():
+    return {
+        "current_username": session.get("username", ""),
+        "current_role": session.get("role", "")
+    }
+
+
+def get_assignable_usernames():
+    role = session.get("role")
+    username = session.get("username")
+    user_id_str = session.get("user_id")
+
+    if not role or not username:
+        return [username] if username else []
+
+    if role == "admin":
+        user_id = ObjectId(user_id_str)
+        team = users_collection.find({"manager_id": user_id}, {"username": 1})
+        names = [username] + [u["username"] for u in team]
+        return names
+
+    elif role == "user":
+        manager_id_str = session.get("manager_id")
+        if manager_id_str:
+            manager_id = ObjectId(manager_id_str)
+            peers = users_collection.find(
+                {"manager_id": manager_id, "role": {"$in": ["user", "low"]}},
+                {"username": 1}
+            )
+            names = [username] + [u["username"] for u in peers if u["username"] != username]
+        else:
+            names = [username]
+        return names
+
+    else:  # low
+        return [username]
+
+
+# ── Auth routes ───────────────────────────────────────────────────────────────
+
+@app.route("/")
+def start_index():
+    if "username" in session:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        user = users_collection.find_one({"username": username})
+        if not user:
+            error = "Invalid username or password."
+        elif "password" not in user or not user["password"]:
+            # First-time setup — no password set yet
+            session["setup_user_id"] = str(user["_id"])
+            return redirect(url_for("set_password"))
+        elif not check_password_hash(user["password"], password):
+            error = "Invalid username or password."
+        else:
+            session["username"] = user["username"]
+            session["role"] = user.get("role", "user")
+            session["user_id"] = str(user["_id"])
+            manager_id = user.get("manager_id")
+            session["manager_id"] = str(manager_id) if manager_id else None
+            return redirect(url_for("dashboard"))
+
+    return render_template("login.html", error=error)
+
+
+@app.route("/set-password", methods=["GET", "POST"])
+def set_password():
+    setup_user_id = session.get("setup_user_id")
+    if not setup_user_id:
+        return redirect(url_for("login"))
+
+    user = users_collection.find_one({"_id": ObjectId(setup_user_id)})
+    if not user:
+        session.pop("setup_user_id", None)
+        return redirect(url_for("login"))
+
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if len(password) < 6:
+            error = "Password must be at least 6 characters."
+        elif password != confirm:
+            error = "Passwords do not match."
+        else:
+            hashed = generate_password_hash(password)
+            users_collection.update_one(
+                {"_id": ObjectId(setup_user_id)},
+                {"$set": {"password": hashed}}
+            )
+            session.pop("setup_user_id", None)
+            session["username"] = user["username"]
+            session["role"] = user.get("role", "user")
+            session["user_id"] = str(user["_id"])
+            manager_id = user.get("manager_id")
+            session["manager_id"] = str(manager_id) if manager_id else None
+            return redirect(url_for("dashboard"))
+
+    return render_template("set_password.html", username=user["username"], error=error)
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    admins = list(users_collection.find({"role": "admin"}, {"username": 1}))
+    error = None
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+        role = request.form.get("role", "user")
+        manager_id_str = request.form.get("manager_id", "")
+
+        if not username:
+            error = "Username is required."
+        elif len(password) < 6:
+            error = "Password must be at least 6 characters."
+        elif password != confirm:
+            error = "Passwords do not match."
+        elif role not in ("user", "low"):
+            error = "Invalid role selected."
+        elif not manager_id_str:
+            error = "Please select a manager."
+        elif users_collection.find_one({"username": username}):
+            error = "That username is already taken."
+        else:
+            hashed = generate_password_hash(password)
+            users_collection.insert_one({
+                "username": username,
+                "password": hashed,
+                "role": role,
+                "manager_id": ObjectId(manager_id_str)
+            })
+            return redirect(url_for("login"))
+
+    return render_template("register.html", admins=admins, error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+# ── Existing routes (all protected) ──────────────────────────────────────────
 
 @app.route("/openTasks")
+@login_required
 def open_tasks():
-    tasks = list(task_collection.find())
-    return render_template("items.html", items=tasks, title="Tasks")
+    role = session.get("role")
+    username = session.get("username")
+    assignable_users = get_assignable_usernames()
+
+    if role == "low":
+        tasks = list(task_collection.find({"assigned": username}))
+    else:
+        tasks = list(task_collection.find())
+
+    for t in tasks:
+        t["_id"] = str(t["_id"])
+
+    return render_template("items.html", items=tasks, title="Tasks", assignable_users=assignable_users)
+
 
 @app.route("/openTickets")
+@login_required
 def open_tickets():
-    tickets = list(tick_collection.find())
-    return render_template("items.html", items=tickets, title="Tickets")
+    role = session.get("role")
+    username = session.get("username")
+    assignable_users = get_assignable_usernames()
+
+    if role == "low":
+        tickets = list(tick_collection.find({"assigned": username}))
+    else:
+        tickets = list(tick_collection.find())
+
+    for t in tickets:
+        t["_id"] = str(t["_id"])
+
+    return render_template("items.html", items=tickets, title="Tickets", assignable_users=assignable_users)
+
 
 @app.route("/openRequests")
+@login_required
 def open_requests():
-    requests_data = list(req_collection.find())
-    return render_template("items.html", items=requests_data, title="Requests")
+    role = session.get("role")
+    username = session.get("username")
+    assignable_users = get_assignable_usernames()
+
+    if role == "low":
+        requests_data = list(req_collection.find({"assigned": username}))
+    else:
+        requests_data = list(req_collection.find())
+
+    for r in requests_data:
+        r["_id"] = str(r["_id"])
+
+    return render_template("items.html", items=requests_data, title="Requests", assignable_users=assignable_users)
+
 
 @app.route("/create")
+@login_required
 def creation():
-    return render_template("creation.html")
+    assignable_users = get_assignable_usernames()
+    current_username = session.get("username")
+    return render_template("creation.html", assignable_users=assignable_users, current_username=current_username)
+
 
 @app.route("/create_item", methods=["POST"])
+@login_required
 def create_item():
     item_type = request.form.get("type")
 
@@ -41,7 +258,8 @@ def create_item():
         "status": request.form.get("status"),
         "description": request.form.get("description"),
         "created": request.form.get("created"),
-        "due": request.form.get("due")
+        "due": request.form.get("due"),
+        "created_by": session.get("username")
     }
 
     if item_type == "Task":
@@ -58,19 +276,39 @@ def create_item():
 
     return redirect(url_for("creation"))
 
+
 @app.route("/appointments")
+@login_required
 def appointments():
+    username = session.get("username")
+    assignable_users = get_assignable_usernames()
     now = datetime.today()
     today_str = now.strftime("%Y-%m-%d")
     month_str = now.strftime("%Y-%m")
 
-    upcoming = list(ap_collection.find({
+    # Filter: show if created_by == username OR invite == username OR no created_by field (legacy)
+    upcoming_all = list(ap_collection.find({
         "date": {"$gte": today_str}
     }).sort("date", 1))
 
-    month_appts = list(ap_collection.find({"date": {"$regex": f"^{month_str}"}}))
+    upcoming = [
+        a for a in upcoming_all
+        if "created_by" not in a
+        or a.get("created_by") == username
+        or a.get("invite") == username
+    ]
 
-    # Build {day: [title, ...]} for calendar labels
+    for a in upcoming:
+        a["_id"] = str(a["_id"])
+
+    month_appts_all = list(ap_collection.find({"date": {"$regex": f"^{month_str}"}}))
+    month_appts = [
+        a for a in month_appts_all
+        if "created_by" not in a
+        or a.get("created_by") == username
+        or a.get("invite") == username
+    ]
+
     appt_by_day = {}
     for a in month_appts:
         if a.get("date"):
@@ -81,11 +319,7 @@ def appointments():
             except Exception:
                 pass
 
-    # Convert ObjectId to string so templates can use them as data attributes
-    for a in upcoming:
-        a["_id"] = str(a["_id"])
-
-    cal = cal_module.Calendar(firstweekday=6)  # Sunday first
+    cal = cal_module.Calendar(firstweekday=6)
     cal_weeks = cal.monthdayscalendar(now.year, now.month)
 
     return render_template("appointments.html",
@@ -93,23 +327,29 @@ def appointments():
         cal_weeks=cal_weeks,
         month_name=now.strftime("%B %Y"),
         today_day=now.day,
-        appt_by_day=appt_by_day
+        appt_by_day=appt_by_day,
+        assignable_users=assignable_users
     )
 
+
 @app.route("/create_appointment", methods=["POST"])
+@login_required
 def create_appointment():
     data = {
-        "title":      request.form.get("title"),
-        "date":       request.form.get("date"),
-        "start_time": request.form.get("start_time"),
-        "end_time":   request.form.get("end_time"),
-        "invite":     request.form.get("invite"),
-        "description": request.form.get("description")
+        "title":       request.form.get("title"),
+        "date":        request.form.get("date"),
+        "start_time":  request.form.get("start_time"),
+        "end_time":    request.form.get("end_time"),
+        "invite":      request.form.get("invite"),
+        "description": request.form.get("description"),
+        "created_by":  session.get("username")
     }
     ap_collection.insert_one(data)
     return redirect(url_for("appointments"))
 
+
 @app.route("/update_appointment", methods=["POST"])
+@login_required
 def update_appointment():
     data = request.get_json()
     appt_id = data.get("id")
@@ -128,13 +368,17 @@ def update_appointment():
     )
     return jsonify({"success": True})
 
+
 @app.route("/delete_appointment", methods=["POST"])
+@login_required
 def delete_appointment():
     data = request.get_json()
     ap_collection.delete_one({"_id": ObjectId(data.get("id"))})
     return jsonify({"success": True})
 
+
 @app.route("/delete_item", methods=["POST"])
+@login_required
 def delete_item():
     data = request.json
     item_id = data.get("id")
@@ -146,10 +390,11 @@ def delete_item():
 
     return jsonify({"success": True})
 
+
 @app.route("/update_item", methods=["POST"])
+@login_required
 def update_item():
     data = request.get_json()
-
     item_id = data.get("id")
 
     if not item_id:
@@ -157,10 +402,10 @@ def update_item():
 
     updated_data = {
         "description": data.get("description"),
-        "status": data.get("status"),
-        "assigned": data.get("assigned"),
-        "created": data.get("created"),
-        "due": data.get("due")
+        "status":      data.get("status"),
+        "assigned":    data.get("assigned"),
+        "created":     data.get("created"),
+        "due":         data.get("due")
     }
 
     for collection in [task_collection, tick_collection, req_collection]:
@@ -173,29 +418,31 @@ def update_item():
 
     return jsonify({"error": "Item not found"}), 404
 
+
 @app.route("/assigned")
+@login_required
 def assigned_tasks():
+    username = session.get("username")
+    assignable_users = get_assignable_usernames()
 
-    tasks = list(task_collection.find())
-    tickets = list(tick_collection.find())
-    requests_data = list(req_collection.find())
+    tasks = list(task_collection.find({"assigned": username}))
+    tickets = list(tick_collection.find({"assigned": username}))
+    requests_data = list(req_collection.find({"assigned": username}))
 
-    # Optional: convert ObjectId → string
-    for item in tasks:
-        item["_id"] = str(item["_id"])
-    for item in tickets:
-        item["_id"] = str(item["_id"])
-    for item in requests_data:
+    for item in tasks + tickets + requests_data:
         item["_id"] = str(item["_id"])
 
     return render_template(
         "assigned.html",
         tasks=tasks,
         tickets=tickets,
-        requests=requests_data
+        requests=requests_data,
+        assignable_users=assignable_users
     )
 
+
 @app.route("/Dashboard")
+@login_required
 def dashboard():
     open_tasks = task_collection.count_documents({"status": "Open"})
     open_requests = req_collection.count_documents({"status": "Open"})
@@ -234,8 +481,6 @@ def dashboard():
         total_all=total_all,
         recent_items=recent_items
     )
-@app.route("/")
-def start_index():
-    return render_template("login.html")
+
 
 app.run(host="0.0.0.0", port=5055)

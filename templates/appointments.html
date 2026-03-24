@@ -120,7 +120,14 @@
             </div>
 
             <label>Invite <span class="req-star">*</span></label>
-            <input type="text" name="invite" placeholder="Person's name" required>
+            <input type="text" name="invite" placeholder="Person's name" list="team-datalist" required>
+            {% if assignable_users %}
+            <datalist id="team-datalist">
+                {% for u in assignable_users %}
+                <option value="{{ u }}">
+                {% endfor %}
+            </datalist>
+            {% endif %}
 
             <label>Description</label>
             <textarea name="description" placeholder="What's this meeting about?" style="height:100px"></textarea>

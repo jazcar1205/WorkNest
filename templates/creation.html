@@ -21,7 +21,11 @@
                 </select>
 
                 <label>Assigned To <span class="req-star">*</span></label>
-                <input type="text" name="assigned" placeholder="Enter a name" required>
+                <select name="assigned" required>
+                    {% for u in assignable_users %}
+                    <option value="{{ u }}" {% if u == current_username %}selected{% endif %}>{{ u }}</option>
+                    {% endfor %}
+                </select>
 
                 <div style="display:flex;gap:14px">
                     <div style="flex:1">
