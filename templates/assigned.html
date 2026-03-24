@@ -2,92 +2,125 @@
 
 {% block content %}
 
-<div class="page-header">
-    <h1 class="page-title">My Work</h1>
-    <p class="page-subtitle">All assigned items by category</p>
-</div>
+<div class="assigned-body">
 
-<div class="work-columns">
-
-    <div class="work-col">
-        <div class="work-col-header">
-            <span class="work-col-title">Tickets</span>
-            <span class="work-col-count">{{ tickets|length }}</span>
+    <div class="items-header" style="margin-bottom:16px">
+        <div>
+            <h1 class="page-title">My Work</h1>
+            <p class="page-subtitle">All assigned items by category</p>
         </div>
-        {% if tickets|length == 0 %}
-            <p class="empty" style="padding:20px 0">No tickets</p>
-        {% else %}
-            {% for item in tickets %}
-            <div class="work-item">
-                <div class="work-item-desc">{{ item.description }}</div>
-                <div class="work-item-footer">
-                    <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
-                    {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        {% endif %}
     </div>
 
-    <div class="work-col">
-        <div class="work-col-header">
-            <span class="work-col-title">Requests</span>
-            <span class="work-col-count">{{ requests|length }}</span>
-        </div>
-        {% if requests|length == 0 %}
-            <p class="empty" style="padding:20px 0">No requests</p>
-        {% else %}
-            {% for item in requests %}
-            <div class="work-item">
-                <div class="work-item-desc">{{ item.description }}</div>
-                <div class="work-item-footer">
-                    <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
-                    {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        {% endif %}
-    </div>
+    <div class="work-columns">
 
-    <div class="work-col">
-        <div class="work-col-header">
-            <span class="work-col-title">Tasks</span>
-            <span class="work-col-count">{{ tasks|length }}</span>
-        </div>
-        {% if tasks|length == 0 %}
-            <p class="empty" style="padding:20px 0">No tasks</p>
-        {% else %}
-            {% for item in tasks %}
-            <div class="work-item">
-                <div class="work-item-desc">{{ item.description }}</div>
-                <div class="work-item-footer">
-                    <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
-                    {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
-                </div>
+        <div class="work-col">
+            <div class="work-col-header">
+                <span class="work-col-title">Tickets</span>
+                <span class="work-col-count">{{ tickets|length }}</span>
             </div>
-            {% endfor %}
-        {% endif %}
-    </div>
+            <div class="work-col-body">
+                {% if tickets|length == 0 %}
+                    <p class="empty" style="padding:20px 0">No tickets</p>
+                {% else %}
+                    {% for item in tickets %}
+                    <div class="work-item">
+                        <div class="work-item-desc">{{ item.description }}</div>
+                        <div class="work-item-footer">
+                            <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+                            {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
 
+        <div class="work-col">
+            <div class="work-col-header">
+                <span class="work-col-title">Requests</span>
+                <span class="work-col-count">{{ requests|length }}</span>
+            </div>
+            <div class="work-col-body">
+                {% if requests|length == 0 %}
+                    <p class="empty" style="padding:20px 0">No requests</p>
+                {% else %}
+                    {% for item in requests %}
+                    <div class="work-item">
+                        <div class="work-item-desc">{{ item.description }}</div>
+                        <div class="work-item-footer">
+                            <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+                            {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="work-col">
+            <div class="work-col-header">
+                <span class="work-col-title">Tasks</span>
+                <span class="work-col-count">{{ tasks|length }}</span>
+            </div>
+            <div class="work-col-body">
+                {% if tasks|length == 0 %}
+                    <p class="empty" style="padding:20px 0">No tasks</p>
+                {% else %}
+                    {% for item in tasks %}
+                    <div class="work-item">
+                        <div class="work-item-desc">{{ item.description }}</div>
+                        <div class="work-item-footer">
+                            <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+                            {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <style>
+/* ── Page fills viewport ─────────────────────────── */
+.main-wrap    { overflow: hidden !important; }
+.page-content { display: flex !important; flex-direction: column !important; overflow: hidden; }
+
+.assigned-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.items-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+/* Columns row fills remaining space */
 .work-columns {
     display: flex;
     gap: 16px;
-    align-items: flex-start;
+    flex: 1;
+    min-height: 0;
 }
 
+/* Each column is a flex card that fills height */
 .work-col {
     flex: 1;
     background: var(--white);
     border: 1px solid var(--border);
     border-radius: 10px;
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    max-height: 620px;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .work-col-header {
@@ -117,19 +150,16 @@
     border-radius: 20px;
 }
 
-.work-items-body {
-    overflow-y: auto;
+/* Scrollable body inside each column */
+.work-col-body {
     flex: 1;
+    overflow-y: auto;
     padding: 10px 12px;
+    min-height: 0;
 }
 
-.work-col > .work-item,
-.work-col > .empty {
-    margin: 0 12px;
-}
-
-.work-col > .work-item:first-of-type { margin-top: 10px; }
-.work-col > .work-item:last-of-type  { margin-bottom: 10px; }
+.work-col-body::-webkit-scrollbar { width: 4px; }
+.work-col-body::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 99px; }
 
 .work-item {
     border: 1px solid var(--border);
@@ -139,6 +169,7 @@
     background: var(--white);
     transition: background 0.1s;
 }
+.work-item:last-child { margin-bottom: 0; }
 .work-item:hover { background: #FDF7F0; }
 
 .work-item-desc {

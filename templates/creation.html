@@ -20,13 +20,13 @@
                     <option>Ticket</option>
                 </select>
 
-                <label>Assigned To</label>
-                <input type="text" name="assigned" placeholder="Enter a name">
+                <label>Assigned To <span class="req-star">*</span></label>
+                <input type="text" name="assigned" placeholder="Enter a name" required>
 
                 <div style="display:flex;gap:14px">
                     <div style="flex:1">
-                        <label>Date Created</label>
-                        <input type="date" name="created">
+                        <label>Date Created <span class="req-star">*</span></label>
+                        <input type="date" name="created" required>
                     </div>
                     <div style="flex:1">
                         <label>Due Date</label>
@@ -49,8 +49,8 @@
 
             <!-- RIGHT -->
             <div class="create-col">
-                <label>Description</label>
-                <textarea name="description" placeholder="Describe what needs to be done..." style="height:200px;margin-bottom:20px"></textarea>
+                <label>Description <span class="req-star">*</span></label>
+                <textarea name="description" placeholder="Describe what needs to be done..." style="height:200px;margin-bottom:20px" required></textarea>
 
                 <button type="submit" class="btn btn-primary" style="width:100%;padding:11px;font-size:14px">
                     Create Item
@@ -84,6 +84,8 @@ function updatePreview() {
     gap: 10px;
     margin-top: -4px;
 }
+
+.req-star { color: #DC2626; }
 </style>
 
 {% endblock %}

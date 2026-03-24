@@ -2,91 +2,96 @@
 
 {% block content %}
 
-<div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between">
-    <div>
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle" id="resultCount"></p>
-    </div>
-    <a href="/create" class="btn btn-primary" style="margin-bottom:2px">+ New</a>
-</div>
+<div class="items-body">
 
-<!-- FILTER BAR -->
-<div class="filter-bar">
-    <div class="search-wrap">
-        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search by description or assignee…" oninput="onFilter()">
-    </div>
-    <select id="statusFilter" class="filter-select" onchange="onFilter()">
-        <option value="">All Statuses</option>
-        <option value="Open">Open</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-    </select>
-</div>
-
-{% if items|length == 0 %}
-    <div class="section-card">
-        <p class="empty">No {{ title.lower() }} yet. <a href="/create" style="color:var(--brown);text-decoration:none;font-weight:600">Create one</a>.</p>
-    </div>
-{% else %}
-
-<!-- CARD GRID (all cards rendered; JS controls visibility) -->
-<div id="itemGrid" class="item-grid">
-    {% for item in items %}
-    <div class="item-card"
-         data-id="{{ item._id }}"
-         data-description="{{ item.description }}"
-         data-status="{{ item.status }}"
-         data-assigned="{{ item.assigned or '' }}"
-         data-created="{{ item.created or '' }}"
-         data-due="{{ item.due or '' }}"
-         onclick="openModal(this)">
-
-        <div class="card-top">
-            <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+    <!-- HEADER -->
+    <div class="items-header">
+        <div>
+            <h1 class="page-title">{{ title }}</h1>
+            <p class="page-subtitle" id="resultCount"></p>
         </div>
-
-        <div class="card-desc">{{ item.description }}</div>
-
-        <div class="card-footer">
-            <span class="card-meta">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
-                {{ item.assigned or '—' }}
-            </span>
-            <span class="card-meta">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                {{ item.due or '—' }}
-            </span>
-        </div>
+        <a href="/create" class="btn btn-primary">+ New</a>
     </div>
-    {% endfor %}
-</div>
 
-<!-- EMPTY SEARCH STATE -->
-<div id="emptySearch" class="section-card" style="display:none">
-    <p class="empty">No items match your search.</p>
-</div>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="search-wrap">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by description or assignee…" oninput="onFilter()">
+        </div>
+        <select id="statusFilter" class="filter-select" onchange="onFilter()">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+        </select>
+    </div>
 
-<!-- PAGINATION -->
-<div class="pagination-bar">
-    <button id="prevBtn" class="page-btn" onclick="prevPage()" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Prev
-    </button>
-    <span id="pageInfo" class="page-info"></span>
-    <button id="nextBtn" class="page-btn" onclick="nextPage()">
-        Next
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-</div>
+    {% if items|length == 0 %}
+        <div class="section-card" style="flex:1;display:flex;align-items:center;justify-content:center">
+            <p class="empty" style="padding:0">No {{ title.lower() }} yet. <a href="/create" style="color:var(--brown);text-decoration:none;font-weight:600">Create one</a>.</p>
+        </div>
+    {% else %}
 
-{% endif %}
+    <!-- CARD GRID -->
+    <div id="itemGrid" class="item-grid">
+        {% for item in items %}
+        <div class="item-card"
+             data-id="{{ item._id }}"
+             data-description="{{ item.description }}"
+             data-status="{{ item.status }}"
+             data-assigned="{{ item.assigned or '' }}"
+             data-created="{{ item.created or '' }}"
+             data-due="{{ item.due or '' }}"
+             onclick="openModal(this)">
+
+            <div class="card-top">
+                <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+            </div>
+
+            <div class="card-desc">{{ item.description }}</div>
+
+            <div class="card-footer">
+                <span class="card-meta">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    {{ item.assigned or '—' }}
+                </span>
+                <span class="card-meta">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    {{ item.due or '—' }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- EMPTY SEARCH -->
+    <div id="emptySearch" style="display:none;flex:1;align-items:center;justify-content:center">
+        <p class="empty" style="padding:0">No items match your search.</p>
+    </div>
+
+    <!-- PAGINATION (pinned at bottom) -->
+    <div class="pagination-bar">
+        <button id="prevBtn" class="page-btn" onclick="prevPage()" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Prev
+        </button>
+        <span id="pageInfo" class="page-info"></span>
+        <button id="nextBtn" class="page-btn" onclick="nextPage()">
+            Next
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+    </div>
+
+    {% endif %}
+
+</div>
 
 <!-- MODAL -->
 <div id="itemModal" class="modal">
@@ -98,8 +103,8 @@
 
         <input type="hidden" id="modal-id">
 
-        <label>Description</label>
-        <input id="modal-title" disabled>
+        <label>Description <span class="req-star">*</span></label>
+        <input id="modal-title" required disabled>
 
         <label>Status</label>
         <select id="modal-status" disabled>
@@ -108,19 +113,21 @@
             <option>Completed</option>
         </select>
 
-        <label>Assigned</label>
-        <input id="modal-assigned" disabled>
+        <label>Assigned <span class="req-star">*</span></label>
+        <input id="modal-assigned" required disabled>
 
         <div style="display:flex;gap:16px">
             <div style="flex:1">
-                <label>Created</label>
-                <input id="modal-created" disabled>
+                <label>Created <span class="req-star">*</span></label>
+                <input id="modal-created" required disabled>
             </div>
             <div style="flex:1">
                 <label>Due Date</label>
                 <input id="modal-due" disabled>
             </div>
         </div>
+
+        <div id="modal-error" class="modal-error" style="display:none"></div>
 
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="enableEdit()">Edit</button>
@@ -140,10 +147,7 @@ function allCards() {
     return Array.from(document.querySelectorAll('.item-card'));
 }
 
-function onFilter() {
-    currentPage = 1;
-    renderPage();
-}
+function onFilter() { currentPage = 1; renderPage(); }
 
 function getFiltered() {
     const q      = (document.getElementById('searchInput').value || '').toLowerCase();
@@ -165,23 +169,27 @@ function renderPage() {
     const start      = (currentPage - 1) * PER_PAGE;
     const end        = start + PER_PAGE;
 
-    // Hide all, show slice
     allCards().forEach(function(c) { c.style.display = 'none'; });
     filtered.slice(start, end).forEach(function(c) { c.style.display = 'flex'; });
 
-    // Empty search message
-    document.getElementById('emptySearch').style.display = total === 0 ? 'block' : 'none';
-    document.getElementById('itemGrid').style.display    = total === 0 ? 'none'  : 'grid';
+    const emptyEl = document.getElementById('emptySearch');
+    const gridEl  = document.getElementById('itemGrid');
+    if (emptyEl) emptyEl.style.display  = total === 0 ? 'flex' : 'none';
+    if (gridEl)  gridEl.style.display   = total === 0 ? 'none' : 'grid';
 
-    // Counts and page label
     const showing = Math.min(PER_PAGE, total - start);
-    document.getElementById('resultCount').textContent =
+    const rcEl = document.getElementById('resultCount');
+    if (rcEl) rcEl.textContent =
         total === 0 ? 'No results' :
         `Showing ${start + 1}–${start + showing} of ${total} item${total !== 1 ? 's' : ''}`;
 
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-    document.getElementById('prevBtn').disabled = currentPage === 1;
-    document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+    const piEl = document.getElementById('pageInfo');
+    if (piEl) piEl.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
 }
 
 function prevPage() { if (currentPage > 1) { currentPage--; renderPage(); } }
@@ -189,17 +197,17 @@ function nextPage() {
     if (currentPage < Math.ceil(filtered.length / PER_PAGE)) { currentPage++; renderPage(); }
 }
 
-// Init on load
 document.addEventListener('DOMContentLoaded', renderPage);
 
 // ── Modal ──────────────────────────────────────────
 function openModal(row) {
-    document.getElementById('modal-id').value      = row.dataset.id;
-    document.getElementById('modal-title').value   = row.dataset.description || '';
-    document.getElementById('modal-status').value  = row.dataset.status || '';
-    document.getElementById('modal-assigned').value= row.dataset.assigned || '';
-    document.getElementById('modal-created').value = row.dataset.created || '';
-    document.getElementById('modal-due').value     = row.dataset.due || '';
+    document.getElementById('modal-id').value       = row.dataset.id;
+    document.getElementById('modal-title').value    = row.dataset.description || '';
+    document.getElementById('modal-status').value   = row.dataset.status || '';
+    document.getElementById('modal-assigned').value = row.dataset.assigned || '';
+    document.getElementById('modal-created').value  = row.dataset.created || '';
+    document.getElementById('modal-due').value      = row.dataset.due || '';
+    hideModalError();
     disableFields();
     document.getElementById('itemModal').style.display = 'block';
 }
@@ -218,15 +226,37 @@ function closeModal() {
     document.getElementById('itemModal').style.display = 'none';
 }
 
+function showModalError(msg) {
+    const el = document.getElementById('modal-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideModalError() {
+    const el = document.getElementById('modal-error');
+    if (el) el.style.display = 'none';
+}
+
 function saveEdit() {
+    const desc     = document.getElementById('modal-title').value.trim();
+    const assigned = document.getElementById('modal-assigned').value.trim();
+    const created  = document.getElementById('modal-created').value.trim();
+
+    if (!desc || !assigned || !created) {
+        showModalError('Description, Assigned, and Created date are required.');
+        return;
+    }
+    hideModalError();
+
     const data = {
         id:          document.getElementById('modal-id').value,
-        description: document.getElementById('modal-title').value,
+        description: desc,
         status:      document.getElementById('modal-status').value,
-        assigned:    document.getElementById('modal-assigned').value,
-        created:     document.getElementById('modal-created').value,
+        assigned:    assigned,
+        created:     created,
         due:         document.getElementById('modal-due').value
     };
+
     fetch('/update_item', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -235,7 +265,7 @@ function saveEdit() {
     .then(function(r) { return r.json(); })
     .then(function(r) {
         if (r.success) location.reload();
-        else alert('Update failed: ' + JSON.stringify(r));
+        else showModalError('Update failed. Please try again.');
     });
 }
 
@@ -257,18 +287,37 @@ window.onclick = function(e) {
 </script>
 
 <style>
+/* ── Page fills viewport ─────────────────────────── */
+.main-wrap   { overflow: hidden !important; }
+.page-content { display: flex !important; flex-direction: column !important; overflow: hidden; }
+
+.items-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Header row */
+.items-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-shrink: 0;
+    margin-bottom: 14px;
+}
+
 /* Filter bar */
 .filter-bar {
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
 }
 
-.search-wrap {
-    position: relative;
-    flex: 1;
-}
+.search-wrap { position: relative; flex: 1; }
 
 .search-icon {
     position: absolute;
@@ -306,7 +355,6 @@ window.onclick = function(e) {
     border-radius: 8px;
     font-size: 13.5px;
     background: var(--white);
-    color: var(--text);
     cursor: pointer;
     outline: none;
 }
@@ -316,27 +364,29 @@ window.onclick = function(e) {
     box-shadow: 0 0 0 3px rgba(200,121,65,0.12);
 }
 
-/* Card grid */
+/* Card grid — fills remaining space */
 .item-grid {
+    flex: 1;
+    min-height: 0;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-bottom: 20px;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 12px;
+    overflow: hidden;
 }
 
-/* Fixed-size card */
+/* Fixed-proportion card */
 .item-card {
+    display: flex;
+    flex-direction: column;
     background: var(--white);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px 18px;
-    height: 138px;
-    display: flex;
-    flex-direction: column;
     cursor: pointer;
     box-shadow: var(--shadow-sm);
-    transition: border-color 0.12s, box-shadow 0.12s, transform 0.1s;
     overflow: hidden;
+    transition: border-color 0.12s, box-shadow 0.12s, transform 0.1s;
 }
 
 .item-card:hover {
@@ -345,10 +395,7 @@ window.onclick = function(e) {
     transform: translateY(-1px);
 }
 
-.card-top {
-    margin-bottom: 8px;
-    flex-shrink: 0;
-}
+.card-top    { flex-shrink: 0; margin-bottom: 8px; }
 
 .card-desc {
     font-size: 13.5px;
@@ -357,7 +404,7 @@ window.onclick = function(e) {
     flex: 1;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     line-height: 1.45;
 }
@@ -366,7 +413,8 @@ window.onclick = function(e) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 10px;
+    margin-top: auto;
+    padding-top: 10px;
     flex-shrink: 0;
     gap: 8px;
 }
@@ -382,13 +430,16 @@ window.onclick = function(e) {
     text-overflow: ellipsis;
 }
 
-/* Pagination */
+/* Pagination — pinned at bottom */
 .pagination-bar {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 16px;
-    padding: 4px 0 8px;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
 }
 
 .page-btn {
@@ -404,8 +455,8 @@ window.onclick = function(e) {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.12s, border-color 0.12s;
     box-shadow: var(--shadow-sm);
+    transition: background 0.12s, border-color 0.12s;
 }
 
 .page-btn:hover:not(:disabled) {
@@ -413,10 +464,7 @@ window.onclick = function(e) {
     border-color: var(--brown-mid);
 }
 
-.page-btn:disabled {
-    opacity: 0.35;
-    cursor: default;
-}
+.page-btn:disabled { opacity: 0.35; cursor: default; }
 
 .page-info {
     font-size: 13px;
@@ -424,6 +472,19 @@ window.onclick = function(e) {
     color: var(--text-muted);
     min-width: 110px;
     text-align: center;
+}
+
+/* Validation */
+.req-star { color: #DC2626; }
+
+.modal-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    border-radius: 7px;
+    padding: 9px 13px;
+    font-size: 13px;
+    margin-bottom: 4px;
 }
 </style>
 

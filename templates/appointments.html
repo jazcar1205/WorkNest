@@ -54,16 +54,16 @@
             <p class="section-title">New Appointment</p>
             <form method="POST" action="/create_appointment">
 
-                <label>Title</label>
+                <label>Title <span class="req-star">*</span></label>
                 <input type="text" name="title" placeholder="e.g. Team Standup" required>
 
-                <label>Date</label>
+                <label>Date <span class="req-star">*</span></label>
                 <input type="date" name="date" required>
 
                 <div style="display:flex;gap:12px">
                     <div style="flex:1">
-                        <label>Start Time</label>
-                        <input type="time" name="start_time">
+                        <label>Start Time <span class="req-star">*</span></label>
+                        <input type="time" name="start_time" required>
                     </div>
                     <div style="flex:1">
                         <label>End Time</label>
@@ -71,8 +71,8 @@
                     </div>
                 </div>
 
-                <label>Invite</label>
-                <input type="text" name="invite" placeholder="Person's name">
+                <label>Invite <span class="req-star">*</span></label>
+                <input type="text" name="invite" placeholder="Person's name" required>
 
                 <label>Description</label>
                 <textarea name="description" placeholder="What's this meeting about?" style="height:64px"></textarea>
@@ -157,6 +157,8 @@
         <label>Description</label>
         <textarea id="appt-description" style="height:80px" disabled></textarea>
 
+        <div id="appt-modal-error" class="modal-error" style="display:none"></div>
+
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="enableApptEdit()">Edit</button>
             <button class="btn btn-primary"   onclick="saveAppt()">Save Changes</button>
@@ -192,8 +194,20 @@ function openApptModal(el) {
     document.getElementById('appt-end').value         = el.dataset.end;
     document.getElementById('appt-invite').value      = el.dataset.invite;
     document.getElementById('appt-description').value = el.dataset.description;
+    hideApptError();
     disableApptFields();
     document.getElementById('apptModal').style.display = 'block';
+}
+
+function showApptError(msg) {
+    const el = document.getElementById('appt-modal-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideApptError() {
+    const el = document.getElementById('appt-modal-error');
+    if (el) el.style.display = 'none';
 }
 
 function closeApptModal() {
@@ -211,13 +225,24 @@ function disableApptFields() {
 }
 
 function saveAppt() {
+    const title  = document.getElementById('appt-title').value.trim();
+    const date   = document.getElementById('appt-date').value.trim();
+    const start  = document.getElementById('appt-start').value.trim();
+    const invite = document.getElementById('appt-invite').value.trim();
+
+    if (!title || !date || !start || !invite) {
+        showApptError('Title, Date, Start Time, and Invite are required.');
+        return;
+    }
+    hideApptError();
+
     const data = {
         id:          document.getElementById('appt-id').value,
-        title:       document.getElementById('appt-title').value,
-        date:        document.getElementById('appt-date').value,
-        start_time:  document.getElementById('appt-start').value,
+        title:       title,
+        date:        date,
+        start_time:  start,
         end_time:    document.getElementById('appt-end').value,
-        invite:      document.getElementById('appt-invite').value,
+        invite:      invite,
         description: document.getElementById('appt-description').value
     };
     fetch('/update_appointment', {
@@ -226,7 +251,7 @@ function saveAppt() {
         body: JSON.stringify(data)
     })
     .then(r => r.json())
-    .then(r => { if (r.success) location.reload(); else alert('Update failed'); });
+    .then(r => { if (r.success) location.reload(); else showApptError('Update failed. Please try again.'); });
 }
 
 function deleteAppt() {
@@ -430,6 +455,18 @@ window.onclick = function(e) {
     text-overflow: ellipsis;
     max-width: 100%;
     line-height: 1.3;
+}
+
+.req-star { color: #DC2626; }
+
+.modal-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    border-radius: 7px;
+    padding: 9px 13px;
+    font-size: 13px;
+    margin-bottom: 4px;
 }
 </style>
 
