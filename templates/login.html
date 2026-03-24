@@ -4,45 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkNest</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
             margin: 0;
             font-family: 'Inter', sans-serif;
-            background: #F5E6D3;
+            background: #F4F0EC;
             display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
+            overflow: hidden;
         }
 
-        .card {
-            background: #fffaf5;
-            padding: 48px 52px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid #dcc9b0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            max-width: 380px;
-            width: 90%;
+        .login-sidebar {
+            width: 420px;
+            background: #150700;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 52px;
+            flex-shrink: 0;
         }
 
-        .logo {
+        .login-logo {
             font-family: 'Pacifico', cursive;
-            color: #80461B;
+            color: #FFFFFF;
             font-size: 32px;
-            margin-bottom: 8px;
+            margin-bottom: 16px;
         }
 
-        p {
-            color: #8a6a50;
-            margin: 0 0 28px 0;
+        .login-tagline {
+            color: #8A6040;
             font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 48px;
+        }
+
+        .login-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .feature-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #C87941;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            font-size: 13px;
+            color: #B89878;
+            line-height: 1.5;
+        }
+
+        .login-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid #E4D8CC;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 48px 52px;
+            width: 380px;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1C0A02;
+            margin: 0 0 8px;
+        }
+
+        .card-sub {
+            font-size: 13.5px;
+            color: #8A7060;
+            margin: 0 0 36px;
         }
 
         .btn {
-            display: inline-block;
-            padding: 11px 32px;
+            display: block;
+            width: 100%;
+            padding: 13px;
             background: #80461B;
             color: white;
             text-decoration: none;
@@ -52,17 +106,42 @@
             transition: background 0.15s;
         }
 
-        .btn:hover {
-            background: #5a2f12;
+        .btn:hover { background: #5a2f12; }
+
+        .login-note {
+            font-size: 11.5px;
+            color: #B0968A;
+            margin-top: 18px;
         }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="logo">WorkNest</div>
-    <p>Your unified work management hub</p>
-    <a href="/Dashboard" class="btn">Go to Dashboard</a>
+<div class="login-sidebar">
+    <div class="login-logo">WorkNest</div>
+    <p class="login-tagline">Your unified work management hub for tasks, requests, tickets, and appointments.</p>
+
+    <div class="login-feature">
+        <div class="feature-dot"></div>
+        <div class="feature-text">Track tasks, requests, and tickets in one place</div>
+    </div>
+    <div class="login-feature">
+        <div class="feature-dot"></div>
+        <div class="feature-text">Dashboard with live status breakdowns</div>
+    </div>
+    <div class="login-feature">
+        <div class="feature-dot"></div>
+        <div class="feature-text">Schedule and manage appointments</div>
+    </div>
+</div>
+
+<div class="login-main">
+    <div class="login-card">
+        <h1 class="card-title">Welcome back</h1>
+        <p class="card-sub">Sign in to access your workspace</p>
+        <a href="/Dashboard" class="btn">Go to Dashboard</a>
+        <p class="login-note">Authentication coming soon</p>
+    </div>
 </div>
 
 </body>

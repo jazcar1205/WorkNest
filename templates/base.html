@@ -4,241 +4,345 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkNest</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --brown:       #80461B;
-            --brown-dark:  #5a2f12;
-            --brown-mid:   #a0612d;
-            --beige:       #F5E6D3;
-            --cream:       #fffaf5;
-            --border:      #dcc9b0;
-            --text:        #2d1a0e;
-            --text-muted:  #8a6a50;
+            --sidebar-bg:     #150700;
+            --sidebar-text:   #B89878;
+            --sidebar-hover:  rgba(255,255,255,0.06);
+            --sidebar-active-bg:  rgba(200,121,65,0.18);
+            --sidebar-active-border: #C87941;
+            --sidebar-active-text: #F5DFC0;
+
+            --page-bg:    #F4F0EC;
+            --white:      #FFFFFF;
+            --cream:      #FFFAF6;
+
+            --brown:      #80461B;
+            --brown-dark: #5a2f12;
+            --brown-mid:  #C87941;
+
+            --border:     #E4D8CC;
+            --border-mid: #D0C0B0;
+
+            --text:       #1C0A02;
+            --text-muted: #8A7060;
+            --text-light: #B0968A;
+
+            --shadow-sm:  0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
         }
 
-        * {
-            box-sizing: border-box;
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
         }
 
         body {
-            margin: 0;
             font-family: 'Inter', sans-serif;
             font-size: 14px;
-            background: var(--beige);
             color: var(--text);
+            background: var(--page-bg);
         }
 
-        /* ── NAVBAR ───────────────────────────────────── */
-        .navbar {
-            background: var(--brown);
-            padding: 0 28px;
+        /* ── APP SHELL ────────────────────────────────── */
+        .app-shell {
             display: flex;
-            justify-content: space-between;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── SIDEBAR ──────────────────────────────────── */
+        .sidebar {
+            width: 228px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            font-family: 'Pacifico', cursive;
+            color: #FFFFFF;
+            font-size: 20px;
+            padding: 24px 20px 20px;
+            text-decoration: none;
+            display: block;
+            letter-spacing: 0.3px;
+        }
+
+        .sidebar-section {
+            padding: 0 12px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #4A3020;
+            padding: 10px 8px 6px;
+        }
+
+        .nav-item {
+            display: flex;
             align-items: center;
-            height: 56px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-        }
-
-        .logo {
-            font-family: 'Pacifico', cursive;
-            color: white;
-            font-size: 22px;
-            letter-spacing: 0.5px;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 7px;
+            color: var(--sidebar-text);
             text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 4px;
-        }
-
-        .nav-links a {
-            color: rgba(255,255,255,0.85);
-            padding: 6px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
+            font-size: 13.5px;
             font-weight: 500;
-            transition: background 0.15s, color 0.15s;
+            margin-bottom: 2px;
+            border-left: 3px solid transparent;
+            transition: background 0.12s, color 0.12s;
         }
 
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.15);
-            color: white;
+        .nav-item:hover {
+            background: var(--sidebar-hover);
+            color: #F0E4D0;
         }
 
-        .create-btn {
-            background: white;
-            color: var(--brown);
-            padding: 7px 16px;
-            border-radius: 6px;
-            text-decoration: none;
+        .nav-item.active {
+            background: var(--sidebar-active-bg);
+            color: var(--sidebar-active-text);
+            border-left-color: var(--sidebar-active-border);
             font-weight: 600;
+        }
+
+        .nav-icon {
+            flex-shrink: 0;
+            opacity: 0.75;
+        }
+
+        .nav-item.active .nav-icon,
+        .nav-item:hover .nav-icon { opacity: 1; }
+
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid #2A1208;
+            margin: 8px 16px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 12px 20px;
+        }
+
+        .sidebar-create-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 9px 14px;
+            background: var(--brown);
+            color: white;
+            border-radius: 7px;
+            text-decoration: none;
             font-size: 13px;
-            transition: background 0.15s;
+            font-weight: 600;
+            transition: background 0.12s;
         }
 
-        .create-btn:hover {
-            background: #f3e5d6;
+        .sidebar-create-btn:hover { background: var(--brown-mid); }
+
+        /* ── MAIN AREA ────────────────────────────────── */
+        .main-wrap {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--page-bg);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* ── PAGE CONTENT ─────────────────────────────── */
-        .content {
-            padding: 28px 32px;
+        .page-content {
+            padding: 32px 36px;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
         }
 
-        /* ── SHARED: TITLE ────────────────────────────── */
-        .title {
-            font-family: 'Pacifico', cursive;
-            color: var(--brown);
-            margin: 0 0 24px 0;
-            font-size: 26px;
+        /* ── SHARED: PAGE HEADER ─────────────────────── */
+        .page-header {
+            margin-bottom: 24px;
         }
 
-        /* ── SHARED: CARD ─────────────────────────────── */
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0 0 2px 0;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ── SHARED: CARD ────────────────────────────── */
         .card {
-            background: var(--cream);
-            border-radius: 12px;
-            padding: 20px;
+            background: var(--white);
+            border-radius: 10px;
             border: 1px solid var(--border);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: var(--shadow-sm);
         }
 
-        /* ── SHARED: CONTAINER (page-level card) ─────── */
-        .container {
-            background: var(--cream);
+        /* ── SHARED: SECTION CARD (padded) ──────────── */
+        .section-card {
+            background: var(--white);
+            border-radius: 10px;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: var(--shadow-sm);
+            padding: 22px 24px;
         }
 
-        /* ── SHARED: FORM ELEMENTS ────────────────────── */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin: 0 0 18px 0;
+        }
+
+        /* ── SHARED: FORM ELEMENTS ───────────────────── */
         label {
             display: block;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--brown);
-            margin-bottom: 4px;
-            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         input, select, textarea {
             width: 100%;
-            padding: 8px 10px;
-            margin-bottom: 14px;
+            padding: 9px 11px;
+            margin-bottom: 16px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 7px;
             font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            background: white;
+            font-size: 13.5px;
+            background: var(--white);
             color: var(--text);
             outline: none;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         input:focus, select:focus, textarea:focus {
             border-color: var(--brown-mid);
-            box-shadow: 0 0 0 3px rgba(128,70,27,0.1);
+            box-shadow: 0 0 0 3px rgba(200,121,65,0.12);
         }
 
         input:disabled, select:disabled {
-            background: #f8f2ec;
+            background: #FAF6F2;
             color: var(--text-muted);
             cursor: default;
         }
 
-        textarea {
-            resize: vertical;
-            height: 120px;
-        }
+        textarea { resize: vertical; }
 
         /* ── SHARED: BUTTONS ─────────────────────────── */
         .btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 8px 18px;
-            border-radius: 6px;
+            border-radius: 7px;
             font-family: 'Inter', sans-serif;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             border: none;
             text-decoration: none;
-            transition: background 0.15s, opacity 0.15s;
+            transition: background 0.12s, box-shadow 0.12s;
+            white-space: nowrap;
         }
 
         .btn-primary {
             background: var(--brown);
             color: white;
+            box-shadow: 0 1px 3px rgba(128,70,27,0.3);
         }
         .btn-primary:hover { background: var(--brown-dark); }
 
         .btn-secondary {
-            background: #f0e6da;
-            color: var(--brown);
-            border: 1px solid var(--border);
+            background: var(--white);
+            color: var(--text);
+            border: 1px solid var(--border-mid);
         }
-        .btn-secondary:hover { background: #e8d8c8; }
+        .btn-secondary:hover { background: #F8F2EC; }
 
         .btn-danger {
-            background: #c0392b;
+            background: #DC2626;
             color: white;
         }
-        .btn-danger:hover { background: #992d22; }
+        .btn-danger:hover { background: #B91C1C; }
 
         /* ── SHARED: TABLE ───────────────────────────── */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
-        th {
+        thead th {
             text-align: left;
-            padding: 10px 12px;
-            border-bottom: 2px solid var(--border);
-            color: var(--brown);
-            font-size: 12px;
-            font-weight: 600;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            background: #FDFAF7;
         }
 
-        td {
-            padding: 11px 12px;
-            border-bottom: 1px solid #ede3d8;
+        thead th:first-child { border-radius: 8px 0 0 0; }
+        thead th:last-child  { border-radius: 0 8px 0 0; }
+
+        tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13.5px;
             color: var(--text);
         }
 
-        tr:last-child td { border-bottom: none; }
+        tbody tr:last-child td { border-bottom: none; }
 
-        tr.clickable-row { cursor: pointer; }
-        tr.clickable-row:hover td { background: #fdf0e4; }
+        tbody tr.clickable-row { cursor: pointer; }
+        tbody tr.clickable-row:hover td { background: #FDF7F2; }
 
         /* ── SHARED: STATUS BADGES ───────────────────── */
         .status {
             display: inline-block;
             padding: 3px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status.open        { background: #FEE2E2; color: #991B1B; }
+        .status.in-progress { background: #FEF3C7; color: #92600A; }
+        .status.completed   { background: #D1FAE5; color: #065F46; }
+
+        /* ── SHARED: TYPE BADGES ─────────────────────── */
+        .type-badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
         }
 
-        .status.open {
-            background: #fde8e8;
-            color: #b91c1c;
-        }
-
-        .status.in-progress {
-            background: #fef3cd;
-            color: #92600a;
-        }
-
-        .status.completed {
-            background: #dcfce7;
-            color: #166534;
-        }
+        .type-badge.task    { background: #DBEAFE; color: #1E40AF; }
+        .type-badge.request { background: #EDE9FE; color: #5B21B6; }
+        .type-badge.ticket  { background: #CCFBF1; color: #0F766E; }
 
         /* ── SHARED: MODAL ───────────────────────────── */
         .modal {
@@ -246,50 +350,52 @@
             position: fixed;
             z-index: 1000;
             inset: 0;
-            background: rgba(0,0,0,0.45);
-            backdrop-filter: blur(2px);
+            background: rgba(15,5,0,0.5);
+            backdrop-filter: blur(3px);
         }
 
         .modal-content {
-            background: var(--cream);
-            margin: 6% auto;
-            padding: 28px 32px;
+            background: var(--white);
+            margin: 5% auto;
+            padding: 30px 32px;
             border: 1px solid var(--border);
             border-radius: 14px;
-            width: 480px;
+            width: 500px;
             max-width: 94vw;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-            position: relative;
+            box-shadow: var(--shadow-md);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
         .modal-header h3 {
             margin: 0;
-            font-size: 16px;
-            color: var(--brown);
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
         }
 
-        .close {
-            font-size: 20px;
+        .modal-close {
+            font-size: 22px;
             cursor: pointer;
-            color: var(--text-muted);
+            color: var(--text-light);
             background: none;
             border: none;
             padding: 0;
             line-height: 1;
         }
-        .close:hover { color: var(--text); }
+        .modal-close:hover { color: var(--text); }
 
         .modal-actions {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
         }
 
         .modal-actions .btn-danger { margin-left: auto; }
@@ -297,34 +403,107 @@
         /* ── SHARED: EMPTY STATE ─────────────────────── */
         .empty {
             text-align: center;
-            color: var(--text-muted);
+            color: var(--text-light);
             font-style: italic;
-            padding: 28px 0;
+            padding: 36px 0;
+            font-size: 13.5px;
         }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-    <a href="/Dashboard" class="logo">WorkNest</a>
+<div class="app-shell">
 
-    <div class="nav-links">
-        <a href="/Dashboard">Dashboard</a>
-        <a href="/openTasks">Tasks</a>
-        <a href="/openRequests">Requests</a>
-        <a href="/openTickets">Tickets</a>
-        <a href="/assigned">My Work</a>
-        <a href="/appointments">Appointments</a>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/Dashboard" class="sidebar-logo">WorkNest</a>
+
+        <hr class="sidebar-divider">
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Menu</div>
+
+            <a href="/Dashboard" class="nav-item" data-path="/Dashboard">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="/openTasks" class="nav-item" data-path="/openTasks">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 11 12 14 22 4"/>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                </svg>
+                Tasks
+            </a>
+
+            <a href="/openRequests" class="nav-item" data-path="/openRequests">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                    <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
+                </svg>
+                Requests
+            </a>
+
+            <a href="/openTickets" class="nav-item" data-path="/openTickets">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+                    <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                Tickets
+            </a>
+
+            <a href="/assigned" class="nav-item" data-path="/assigned">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                My Work
+            </a>
+
+            <a href="/appointments" class="nav-item" data-path="/appointments">
+                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Appointments
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <a href="/create" class="sidebar-create-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                New Item
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrap">
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
     </div>
 
-    <a href="/create" class="create-btn">+ Create</a>
-</nav>
-
-<!-- PAGE CONTENT -->
-<div class="content">
-    {% block content %}{% endblock %}
 </div>
+
+<script>
+// Highlight active nav item
+(function() {
+    const path = window.location.pathname;
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+        if (el.getAttribute('data-path') === path) {
+            el.classList.add('active');
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

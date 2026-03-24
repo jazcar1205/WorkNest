@@ -2,21 +2,25 @@
 
 {% block content %}
 
-<h1 class="title">{{ title }}</h1>
+<div class="page-header">
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-subtitle">{{ items|length }} item{{ 's' if items|length != 1 else '' }}</p>
+</div>
 
-<div class="container">
+<div class="section-card" style="padding:0;overflow:hidden">
 
     {% if items|length == 0 %}
-        <p class="empty">No {{ title.lower() }} yet. <a href="/create" style="color:var(--brown)">Create one</a>.</p>
+        <p class="empty">No {{ title.lower() }} yet. <a href="/create" style="color:var(--brown);text-decoration:none;font-weight:600">Create one</a>.</p>
     {% else %}
 
     <table>
         <thead>
         <tr>
-            <th style="width:40px">#</th>
+            <th style="width:44px">#</th>
             <th>Description</th>
             <th style="width:130px">Status</th>
-            <th style="width:140px">Assigned</th>
+            <th style="width:150px">Assigned</th>
+            <th style="width:110px">Due</th>
         </tr>
         </thead>
         <tbody>
@@ -29,22 +33,17 @@
             data-created="{{ item.created }}"
             data-due="{{ item.due }}"
             onclick="openModal(this)">
-
-            <td style="color:var(--text-muted)">{{ loop.index }}</td>
+            <td style="color:var(--text-light);font-size:12px">{{ loop.index }}</td>
             <td>{{ item.description }}</td>
-            <td>
-                <span class="status {{ item.status|lower|replace(' ', '-') }}">
-                    {{ item.status }}
-                </span>
-            </td>
-            <td>{{ item.assigned }}</td>
+            <td><span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span></td>
+            <td style="color:var(--text-muted)">{{ item.assigned or '—' }}</td>
+            <td style="color:var(--text-muted)">{{ item.due or '—' }}</td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
 
     {% endif %}
-
 </div>
 
 <!-- MODAL -->
@@ -52,7 +51,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3>Item Details</h3>
-            <button class="close" onclick="closeModal()">&times;</button>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
 
         <input type="hidden" id="modal-id">
@@ -70,7 +69,7 @@
         <label>Assigned</label>
         <input id="modal-assigned" disabled>
 
-        <div style="display:flex;gap:14px">
+        <div style="display:flex;gap:16px">
             <div style="flex:1">
                 <label>Created</label>
                 <input id="modal-created" disabled>
@@ -83,7 +82,7 @@
 
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="enableEdit()">Edit</button>
-            <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+            <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
             <button class="btn btn-danger" onclick="deleteItem()">Delete</button>
         </div>
     </div>
@@ -91,12 +90,12 @@
 
 <script>
 function openModal(row) {
-    document.getElementById("modal-id").value = row.dataset.id;
-    document.getElementById("modal-title").value = row.dataset.description || "";
-    document.getElementById("modal-status").value = row.dataset.status || "";
-    document.getElementById("modal-assigned").value = row.dataset.assigned || "";
-    document.getElementById("modal-created").value = row.dataset.created || "";
-    document.getElementById("modal-due").value = row.dataset.due || "";
+    document.getElementById("modal-id").value        = row.dataset.id;
+    document.getElementById("modal-title").value     = row.dataset.description || "";
+    document.getElementById("modal-status").value    = row.dataset.status || "";
+    document.getElementById("modal-assigned").value  = row.dataset.assigned || "";
+    document.getElementById("modal-created").value   = row.dataset.created || "";
+    document.getElementById("modal-due").value       = row.dataset.due || "";
     disableFields();
     document.getElementById("itemModal").style.display = "block";
 }
@@ -117,12 +116,12 @@ function closeModal() {
 
 function saveEdit() {
     const data = {
-        id: document.getElementById("modal-id").value,
+        id:          document.getElementById("modal-id").value,
         description: document.getElementById("modal-title").value,
-        status: document.getElementById("modal-status").value,
-        assigned: document.getElementById("modal-assigned").value,
-        created: document.getElementById("modal-created").value,
-        due: document.getElementById("modal-due").value
+        status:      document.getElementById("modal-status").value,
+        assigned:    document.getElementById("modal-assigned").value,
+        created:     document.getElementById("modal-created").value,
+        due:         document.getElementById("modal-due").value
     };
 
     fetch("/update_item", {
@@ -134,27 +133,24 @@ function saveEdit() {
     .then(res => {
         if (res.success) { location.reload(); }
         else { alert("Update failed: " + JSON.stringify(res)); }
-    })
-    .catch(err => alert("Request failed — check console"));
+    });
 }
 
 function deleteItem() {
-    const id = document.getElementById("modal-id").value;
     if (!confirm("Delete this item?")) return;
-
     fetch("/delete_item", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: id })
+        body: JSON.stringify({ id: document.getElementById("modal-id").value })
     })
     .then(res => res.json())
     .then(() => location.reload());
 }
 
-window.onclick = function(event) {
-    let modal = document.getElementById("itemModal");
-    if (event.target == modal) modal.style.display = "none";
-}
+window.onclick = function(e) {
+    const modal = document.getElementById("itemModal");
+    if (e.target === modal) modal.style.display = "none";
+};
 </script>
 
 {% endblock %}

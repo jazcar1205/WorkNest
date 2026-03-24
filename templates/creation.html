@@ -2,14 +2,17 @@
 
 {% block content %}
 
-<h1 class="title">Create Item</h1>
+<div class="page-header">
+    <h1 class="page-title">Create Item</h1>
+    <p class="page-subtitle">Add a new task, request, or ticket</p>
+</div>
 
-<div class="container" style="max-width:720px">
+<div class="section-card" style="max-width:760px">
     <form method="POST" action="/create_item">
-        <div class="form-row">
+        <div class="create-layout">
 
             <!-- LEFT -->
-            <div class="form-col">
+            <div class="create-col">
                 <label>Type</label>
                 <select name="type">
                     <option>Task</option>
@@ -18,33 +21,40 @@
                 </select>
 
                 <label>Assigned To</label>
-                <input type="text" name="assigned" placeholder="Enter name">
+                <input type="text" name="assigned" placeholder="Enter a name">
 
-                <label>Day Created</label>
-                <input type="date" name="created">
-
-                <label>Due Date</label>
-                <input type="date" name="due">
+                <div style="display:flex;gap:14px">
+                    <div style="flex:1">
+                        <label>Date Created</label>
+                        <input type="date" name="created">
+                    </div>
+                    <div style="flex:1">
+                        <label>Due Date</label>
+                        <input type="date" name="due">
+                    </div>
+                </div>
 
                 <label>Status</label>
-                <select name="status" id="statusSelect" onchange="updateStatusPreview()">
+                <select name="status" id="statusSelect" onchange="updatePreview()">
                     <option value="Open">Open</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Completed">Completed</option>
                 </select>
 
                 <div class="preview-row">
-                    <span style="font-size:13px;color:var(--text-muted)">Preview:</span>
+                    <span style="font-size:12px;color:var(--text-muted)">Preview</span>
                     <span id="statusPreview" class="status open">Open</span>
                 </div>
             </div>
 
             <!-- RIGHT -->
-            <div class="form-col">
+            <div class="create-col">
                 <label>Description</label>
-                <textarea name="description" placeholder="Describe the item..." style="height:180px"></textarea>
+                <textarea name="description" placeholder="Describe what needs to be done..." style="height:200px;margin-bottom:20px"></textarea>
 
-                <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px">Create Item</button>
+                <button type="submit" class="btn btn-primary" style="width:100%;padding:11px;font-size:14px">
+                    Create Item
+                </button>
             </div>
 
         </div>
@@ -52,30 +62,27 @@
 </div>
 
 <script>
-function updateStatusPreview() {
+function updatePreview() {
     const select = document.getElementById("statusSelect");
     const preview = document.getElementById("statusPreview");
-    const className = select.value.toLowerCase().replace(" ", "-");
-    preview.className = "status " + className;
-    preview.innerText = select.value;
+    preview.className = "status " + select.value.toLowerCase().replace(" ", "-");
+    preview.textContent = select.value;
 }
 </script>
 
 <style>
-.form-row {
+.create-layout {
     display: flex;
-    gap: 28px;
+    gap: 32px;
 }
 
-.form-col {
-    flex: 1;
-}
+.create-col { flex: 1; }
 
 .preview-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 4px;
+    margin-top: -4px;
 }
 </style>
 

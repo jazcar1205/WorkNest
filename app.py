@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from pymongo import MongoClient
 from datetime import datetime
 from bson.objectid import ObjectId
+import calendar as cal_module
 app = Flask(__name__)
 
 client = MongoClient("mongodb+srv://jazcarlos4_db_user:kSfIBaCBdX0ay29n@type-db.u1wzklp.mongodb.net/?appName=type-db")
@@ -59,13 +60,33 @@ def create_item():
 
 @app.route("/appointments")
 def appointments():
-    today = datetime.today().strftime("%Y-%m-%d")
+    now = datetime.today()
+    today_str = now.strftime("%Y-%m-%d")
+    month_str = now.strftime("%Y-%m")
 
-    appts = list(ap_collection.find({
-        "date": {"$gte": today}
+    upcoming = list(ap_collection.find({
+        "date": {"$gte": today_str}
     }).sort("date", 1))
 
-    return render_template("appointments.html", appointments=appts)
+    month_appts = list(ap_collection.find({"date": {"$regex": f"^{month_str}"}}))
+    appt_days = set()
+    for a in month_appts:
+        if a.get("date"):
+            try:
+                appt_days.add(int(a["date"].split("-")[2]))
+            except Exception:
+                pass
+
+    cal = cal_module.Calendar(firstweekday=6)  # Sunday first
+    cal_weeks = cal.monthdayscalendar(now.year, now.month)
+
+    return render_template("appointments.html",
+        appointments=upcoming,
+        cal_weeks=cal_weeks,
+        month_name=now.strftime("%B %Y"),
+        today_day=now.day,
+        appt_days=appt_days
+    )
 
 @app.route("/create_appointment", methods=["POST"])
 def create_appointment():
@@ -143,7 +164,6 @@ def assigned_tasks():
 
 @app.route("/Dashboard")
 def dashboard():
-
     open_tasks = task_collection.count_documents({"status": "Open"})
     open_requests = req_collection.count_documents({"status": "Open"})
     open_tickets = tick_collection.count_documents({"status": "Open"})
@@ -160,13 +180,26 @@ def dashboard():
         tick_collection.count_documents({"status": "Completed"})
     )
 
+    total_all = open_tasks + open_requests + open_tickets + in_progress + completed
+
+    recent_items = []
+    for coll, type_label in [(task_collection, "Task"), (req_collection, "Request"), (tick_collection, "Ticket")]:
+        for item in coll.find().sort("_id", -1).limit(3):
+            item["_id"] = str(item["_id"])
+            item["type_label"] = type_label
+            recent_items.append(item)
+    recent_items.sort(key=lambda x: x["_id"], reverse=True)
+    recent_items = recent_items[:6]
+
     return render_template(
         "dashboard.html",
         open_tasks=open_tasks,
         open_requests=open_requests,
         open_tickets=open_tickets,
         in_progress=in_progress,
-        completed=completed
+        completed=completed,
+        total_all=total_all,
+        recent_items=recent_items
     )
 @app.route("/")
 def start_index():

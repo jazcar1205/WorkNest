@@ -2,76 +2,335 @@
 
 {% block content %}
 
-<h1 class="title">Dashboard</h1>
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle" id="dash-date"></p>
+</div>
 
-<div class="dash-row">
+<!-- STAT CARDS -->
+<div class="stat-row">
 
-    <div class="dash-card open">
-        <div class="dash-label">Open Tasks</div>
-        <div class="dash-number">{{ open_tasks }}</div>
+    <div class="stat-card">
+        <div class="stat-icon-wrap tasks">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+        </div>
+        <div class="stat-num">{{ open_tasks }}</div>
+        <div class="stat-label">Open Tasks</div>
     </div>
 
-    <div class="dash-card progress">
-        <div class="dash-label">In Progress</div>
-        <div class="dash-number">{{ in_progress }}</div>
+    <div class="stat-card">
+        <div class="stat-icon-wrap progress">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
+        <div class="stat-num">{{ in_progress }}</div>
+        <div class="stat-label">In Progress</div>
     </div>
 
-    <div class="dash-card request">
-        <div class="dash-label">Open Requests</div>
-        <div class="dash-number">{{ open_requests }}</div>
+    <div class="stat-card">
+        <div class="stat-icon-wrap requests">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
+            </svg>
+        </div>
+        <div class="stat-num">{{ open_requests }}</div>
+        <div class="stat-label">Open Requests</div>
     </div>
 
-    <div class="dash-card ticket">
-        <div class="dash-label">Open Tickets</div>
-        <div class="dash-number">{{ open_tickets }}</div>
+    <div class="stat-card">
+        <div class="stat-icon-wrap tickets">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+        </div>
+        <div class="stat-num">{{ open_tickets }}</div>
+        <div class="stat-label">Open Tickets</div>
     </div>
 
-    <div class="dash-card completed">
-        <div class="dash-label">Completed</div>
-        <div class="dash-number">{{ completed }}</div>
+    <div class="stat-card">
+        <div class="stat-icon-wrap completed">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+        <div class="stat-num">{{ completed }}</div>
+        <div class="stat-label">Completed</div>
     </div>
 
 </div>
 
+<!-- BOTTOM ROW -->
+<div class="dash-body">
+
+    <!-- RECENT ITEMS -->
+    <div class="section-card" style="flex:1;min-width:0">
+        <p class="section-title">Recent Items</p>
+
+        {% if recent_items|length == 0 %}
+            <p class="empty">No items yet.</p>
+        {% else %}
+        <table>
+            <thead>
+            <tr>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Assigned</th>
+                <th>Due</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in recent_items %}
+            <tr>
+                <td><span class="type-badge {{ item.type_label|lower }}">{{ item.type_label }}</span></td>
+                <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ item.description }}</td>
+                <td><span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span></td>
+                <td style="color:var(--text-muted)">{{ item.assigned or '—' }}</td>
+                <td style="color:var(--text-muted)">{{ item.due or '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+    <!-- WORK SUMMARY -->
+    <div class="section-card summary-panel">
+        <p class="section-title">Work Summary</p>
+
+        {% set open_all = open_tasks + open_requests + open_tickets %}
+        {% if total_all > 0 %}
+            {% set open_pct   = (open_all    / total_all * 100) | round | int %}
+            {% set prog_pct   = (in_progress / total_all * 100) | round | int %}
+            {% set done_pct   = (completed   / total_all * 100) | round | int %}
+        {% else %}
+            {% set open_pct = 0 %}{% set prog_pct = 0 %}{% set done_pct = 0 %}
+        {% endif %}
+
+        <div class="summary-row">
+            <div class="summary-meta">
+                <span class="summary-dot open-dot"></span>
+                <span class="summary-label">Open</span>
+                <span class="summary-count">{{ open_all }}</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill open-fill" style="width:{{ open_pct }}%"></div>
+            </div>
+        </div>
+
+        <div class="summary-row">
+            <div class="summary-meta">
+                <span class="summary-dot prog-dot"></span>
+                <span class="summary-label">In Progress</span>
+                <span class="summary-count">{{ in_progress }}</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill prog-fill" style="width:{{ prog_pct }}%"></div>
+            </div>
+        </div>
+
+        <div class="summary-row">
+            <div class="summary-meta">
+                <span class="summary-dot done-dot"></span>
+                <span class="summary-label">Completed</span>
+                <span class="summary-count">{{ completed }}</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill done-fill" style="width:{{ done_pct }}%"></div>
+            </div>
+        </div>
+
+        <div class="summary-total">
+            {{ total_all }} total item{{ 's' if total_all != 1 else '' }}
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+        <p class="section-title" style="margin-bottom:14px">By Category</p>
+
+        <div class="cat-row">
+            <div class="cat-chip tasks-chip">
+                <span class="cat-num">{{ open_tasks }}</span>
+                <span class="cat-lbl">Tasks</span>
+            </div>
+            <div class="cat-chip req-chip">
+                <span class="cat-num">{{ open_requests }}</span>
+                <span class="cat-lbl">Requests</span>
+            </div>
+            <div class="cat-chip tick-chip">
+                <span class="cat-num">{{ open_tickets }}</span>
+                <span class="cat-lbl">Tickets</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+</script>
+
 <style>
-.dash-row {
+/* Stat row */
+.stat-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    margin-top: 8px;
+    gap: 14px;
+    margin-bottom: 22px;
 }
 
-.dash-card {
-    flex: 1 1 160px;
-    background: var(--cream);
-    border-radius: 12px;
-    padding: 24px 20px;
+.stat-card {
+    flex: 1;
+    background: var(--white);
     border: 1px solid var(--border);
-    border-left-width: 5px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border-radius: 10px;
+    padding: 20px 18px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.dash-label {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 10px;
+.stat-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.dash-number {
-    font-size: 36px;
+.stat-icon-wrap.tasks     { background: #DBEAFE; color: #1E40AF; }
+.stat-icon-wrap.progress  { background: #FEF3C7; color: #92600A; }
+.stat-icon-wrap.requests  { background: #EDE9FE; color: #5B21B6; }
+.stat-icon-wrap.tickets   { background: #CCFBF1; color: #0F766E; }
+.stat-icon-wrap.completed { background: #D1FAE5; color: #065F46; }
+
+.stat-num {
+    font-size: 32px;
     font-weight: 700;
     color: var(--text);
     line-height: 1;
 }
 
-.dash-card.open      { border-left-color: #b91c1c; }
-.dash-card.progress  { border-left-color: #d97706; }
-.dash-card.request   { border-left-color: #6d28d9; }
-.dash-card.ticket    { border-left-color: #0e7490; }
-.dash-card.completed { border-left-color: #166534; }
+.stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Bottom row */
+.dash-body {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+/* Summary panel */
+.summary-panel {
+    width: 260px;
+    flex-shrink: 0;
+}
+
+.summary-row { margin-bottom: 16px; }
+
+.summary-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.summary-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.open-dot { background: #991B1B; }
+.prog-dot { background: #92600A; }
+.done-dot { background: #065F46; }
+
+.summary-label {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.summary-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.progress-track {
+    height: 6px;
+    background: #F0E8E0;
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    min-width: 2px;
+}
+
+.open-fill { background: #EF4444; }
+.prog-fill { background: #F59E0B; }
+.done-fill { background: #10B981; }
+
+.summary-total {
+    font-size: 12px;
+    color: var(--text-light);
+    text-align: right;
+    margin-top: -8px;
+}
+
+/* Category chips */
+.cat-row {
+    display: flex;
+    gap: 8px;
+}
+
+.cat-chip {
+    flex: 1;
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.tasks-chip { background: #EFF6FF; }
+.req-chip   { background: #F5F3FF; }
+.tick-chip  { background: #F0FDFA; }
+
+.cat-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.cat-lbl {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 </style>
 
 {% endblock %}
