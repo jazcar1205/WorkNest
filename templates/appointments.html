@@ -2,17 +2,18 @@
 
 {% block content %}
 
-<div class="page-header">
-    <h1 class="page-title">Appointments</h1>
-    <p class="page-subtitle">{{ month_name }}</p>
+<div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px">
+    <div>
+        <h1 class="page-title">Appointments</h1>
+        <p class="page-subtitle">{{ month_name }}</p>
+    </div>
+    <button class="btn btn-primary" onclick="openPanel()">+ New Appointment</button>
 </div>
 
 <div class="appt-layout">
 
-    <!-- LEFT: Upcoming + Create -->
+    <!-- LEFT: Upcoming list only -->
     <div class="appt-left">
-
-        <!-- Upcoming list -->
         <div class="section-card" style="padding:0;overflow:hidden">
             <div class="appt-list-header">
                 <p class="section-title" style="margin:0">Upcoming</p>
@@ -48,39 +49,6 @@
                 {% endif %}
             </div>
         </div>
-
-        <!-- Create form -->
-        <div class="section-card">
-            <p class="section-title">New Appointment</p>
-            <form method="POST" action="/create_appointment">
-
-                <label>Title <span class="req-star">*</span></label>
-                <input type="text" name="title" placeholder="e.g. Team Standup" required>
-
-                <label>Date <span class="req-star">*</span></label>
-                <input type="date" name="date" required>
-
-                <div style="display:flex;gap:12px">
-                    <div style="flex:1">
-                        <label>Start Time <span class="req-star">*</span></label>
-                        <input type="time" name="start_time" required>
-                    </div>
-                    <div style="flex:1">
-                        <label>End Time</label>
-                        <input type="time" name="end_time">
-                    </div>
-                </div>
-
-                <label>Invite <span class="req-star">*</span></label>
-                <input type="text" name="invite" placeholder="Person's name" required>
-
-                <label>Description</label>
-                <textarea name="description" placeholder="What's this meeting about?" style="height:64px"></textarea>
-
-                <button type="submit" class="btn btn-primary" style="width:100%">Create Appointment</button>
-            </form>
-        </div>
-
     </div>
 
     <!-- RIGHT: Calendar -->
@@ -89,7 +57,6 @@
             <p class="section-title">{{ month_name }}</p>
 
             <div class="calendar">
-                <!-- Day headers (Sunday first) -->
                 <div class="cal-day-header">Sun</div>
                 <div class="cal-day-header">Mon</div>
                 <div class="cal-day-header">Tue</div>
@@ -118,13 +85,56 @@
                     {% endfor %}
                 {% endfor %}
             </div>
-
         </div>
     </div>
 
 </div>
 
-<!-- APPOINTMENT MODAL -->
+<!-- ── SLIDE-IN CREATE PANEL ─────────────────────── -->
+<div id="panelOverlay" class="panel-overlay" onclick="closePanel()"></div>
+
+<div id="createPanel" class="create-panel">
+    <div class="panel-header">
+        <h3 class="panel-title">New Appointment</h3>
+        <button class="modal-close" onclick="closePanel()">&times;</button>
+    </div>
+
+    <div class="panel-body">
+        <form method="POST" action="/create_appointment">
+
+            <label>Title <span class="req-star">*</span></label>
+            <input type="text" name="title" placeholder="e.g. Team Standup" required>
+
+            <label>Date <span class="req-star">*</span></label>
+            <input type="date" name="date" required>
+
+            <div style="display:flex;gap:12px">
+                <div style="flex:1">
+                    <label>Start Time <span class="req-star">*</span></label>
+                    <input type="time" name="start_time" required>
+                </div>
+                <div style="flex:1">
+                    <label>End Time</label>
+                    <input type="time" name="end_time">
+                </div>
+            </div>
+
+            <label>Invite <span class="req-star">*</span></label>
+            <input type="text" name="invite" placeholder="Person's name" required>
+
+            <label>Description</label>
+            <textarea name="description" placeholder="What's this meeting about?" style="height:100px"></textarea>
+
+            <div class="panel-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePanel()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Appointment</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ── DETAIL / EDIT MODAL ───────────────────────── -->
 <div id="apptModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -134,15 +144,15 @@
 
         <input type="hidden" id="appt-id">
 
-        <label>Title</label>
+        <label>Title <span class="req-star">*</span></label>
         <input id="appt-title" disabled>
 
-        <label>Date</label>
+        <label>Date <span class="req-star">*</span></label>
         <input type="date" id="appt-date" disabled>
 
         <div style="display:flex;gap:14px">
             <div style="flex:1">
-                <label>Start Time</label>
+                <label>Start Time <span class="req-star">*</span></label>
                 <input type="time" id="appt-start" disabled>
             </div>
             <div style="flex:1">
@@ -151,7 +161,7 @@
             </div>
         </div>
 
-        <label>Invite</label>
+        <label>Invite <span class="req-star">*</span></label>
         <input id="appt-invite" disabled>
 
         <label>Description</label>
@@ -173,19 +183,27 @@ function fmt12(t) {
     if (!t) return '';
     const [h, m] = t.split(':').map(Number);
     const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
+    const h12  = h % 12 || 12;
     return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
-// Render all time badges on page load
 document.querySelectorAll('.appt-time-badge').forEach(function(el) {
     const s = el.dataset.start, e = el.dataset.end;
-    if (s || e) {
-        el.textContent = s && e ? `${fmt12(s)} – ${fmt12(e)}` : fmt12(s || e);
-    }
+    if (s || e) el.textContent = (s && e) ? `${fmt12(s)} – ${fmt12(e)}` : fmt12(s || e);
 });
 
-// ── Modal ──────────────────────────────────────────
+// ── Slide-in panel ─────────────────────────────────
+function openPanel() {
+    document.getElementById('createPanel').classList.add('open');
+    document.getElementById('panelOverlay').classList.add('open');
+}
+
+function closePanel() {
+    document.getElementById('createPanel').classList.remove('open');
+    document.getElementById('panelOverlay').classList.remove('open');
+}
+
+// ── Detail/Edit modal ──────────────────────────────
 function openApptModal(el) {
     document.getElementById('appt-id').value          = el.dataset.id;
     document.getElementById('appt-title').value       = el.dataset.title;
@@ -197,17 +215,6 @@ function openApptModal(el) {
     hideApptError();
     disableApptFields();
     document.getElementById('apptModal').style.display = 'block';
-}
-
-function showApptError(msg) {
-    const el = document.getElementById('appt-modal-error');
-    el.textContent = msg;
-    el.style.display = 'block';
-}
-
-function hideApptError() {
-    const el = document.getElementById('appt-modal-error');
-    if (el) el.style.display = 'none';
 }
 
 function closeApptModal() {
@@ -224,6 +231,17 @@ function disableApptFields() {
         .forEach(function(el) { el.disabled = true; });
 }
 
+function showApptError(msg) {
+    const el = document.getElementById('appt-modal-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function hideApptError() {
+    const el = document.getElementById('appt-modal-error');
+    if (el) el.style.display = 'none';
+}
+
 function saveAppt() {
     const title  = document.getElementById('appt-title').value.trim();
     const date   = document.getElementById('appt-date').value.trim();
@@ -236,19 +254,18 @@ function saveAppt() {
     }
     hideApptError();
 
-    const data = {
-        id:          document.getElementById('appt-id').value,
-        title:       title,
-        date:        date,
-        start_time:  start,
-        end_time:    document.getElementById('appt-end').value,
-        invite:      invite,
-        description: document.getElementById('appt-description').value
-    };
     fetch('/update_appointment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+            id:          document.getElementById('appt-id').value,
+            title:       title,
+            date:        date,
+            start_time:  start,
+            end_time:    document.getElementById('appt-end').value,
+            invite:      invite,
+            description: document.getElementById('appt-description').value
+        })
     })
     .then(r => r.json())
     .then(r => { if (r.success) location.reload(); else showApptError('Update failed. Please try again.'); });
@@ -279,11 +296,8 @@ window.onclick = function(e) {
 }
 
 .appt-left {
-    width: 300px;
+    width: 280px;
     flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
 }
 
 .appt-right { flex: 1; min-width: 0; }
@@ -307,7 +321,7 @@ window.onclick = function(e) {
 }
 
 .appt-list {
-    max-height: 340px;
+    max-height: calc(100vh - 220px);
     overflow-y: auto;
     padding: 10px 12px;
 }
@@ -373,7 +387,7 @@ window.onclick = function(e) {
     color: var(--text-light);
 }
 
-/* Calendar grid */
+/* Calendar */
 .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -399,15 +413,8 @@ window.onclick = function(e) {
     overflow: hidden;
 }
 
-.cal-empty {
-    background: transparent;
-    border-color: transparent;
-}
-
-.cal-today {
-    background: #FFF7ED;
-    border-color: var(--brown-mid);
-}
+.cal-empty { background: transparent; border-color: transparent; }
+.cal-today { background: #FFF7ED; border-color: var(--brown-mid); }
 
 .cal-num {
     font-size: 12px;
@@ -430,7 +437,6 @@ window.onclick = function(e) {
     font-weight: 700;
 }
 
-/* Calendar event row */
 .cal-event {
     display: flex;
     align-items: center;
@@ -457,6 +463,72 @@ window.onclick = function(e) {
     line-height: 1.3;
 }
 
+/* ── Slide-in panel ─────────────────────────────── */
+.panel-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,5,0,0.35);
+    backdrop-filter: blur(2px);
+    z-index: 900;
+}
+
+.panel-overlay.open { display: block; }
+
+.create-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100vh;
+    background: var(--white);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.create-panel.open {
+    transform: translateX(0);
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 99px; }
+
+.panel-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+/* Shared */
 .req-star { color: #DC2626; }
 
 .modal-error {
