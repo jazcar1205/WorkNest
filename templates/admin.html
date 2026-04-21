@@ -44,6 +44,7 @@
             <tr>
                 <th>Username</th>
                 <th>Role</th>
+                <th>Manager</th>
                 <th style="width:150px">Actions</th>
             </tr>
         </thead>
@@ -64,9 +65,21 @@
                     </select>
                 </td>
                 <td>
+                    <select class="manager-select inline-select" data-id="{{ user._id }}">
+                        <option value="">— None —</option>
+                        {% for u in users %}
+                        {% if u._id != user._id %}
+                        <option value="{{ u._id }}" {% if user.get('manager_id') == u._id %}selected{% endif %}>
+                            {{ u.username }}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
                     <div style="display:flex;gap:8px">
                         <button class="btn btn-secondary save-btn" style="padding:5px 14px;font-size:12px"
-                                onclick="saveRole('{{ user._id }}', this)">Save</button>
+                                onclick="saveUser('{{ user._id }}', this)">Save</button>
                         {% if user._id != current_user_id %}
                         <button class="btn btn-danger" style="padding:5px 10px;font-size:12px"
                                 onclick="deleteUser('{{ user._id }}', '{{ user.username }}')">Delete</button>
@@ -194,12 +207,13 @@ function createUser() {
     });
 }
 
-function saveRole(userId, btn) {
-    const select = document.querySelector('.role-select[data-id="' + userId + '"]');
+function saveUser(userId, btn) {
+    const role      = document.querySelector('.role-select[data-id="' + userId + '"]').value;
+    const managerId = document.querySelector('.manager-select[data-id="' + userId + '"]').value;
     fetch('/admin/update_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId, role: select.value })
+        body: JSON.stringify({ id: userId, role: role, manager_id: managerId })
     })
     .then(r => r.json())
     .then(r => {

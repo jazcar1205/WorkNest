@@ -591,6 +591,8 @@ def admin_panel():
     users = list(users_collection.find({}, {"password": 0}))
     for u in users:
         u["_id"] = str(u["_id"])
+        if u.get("manager_id"):
+            u["manager_id"] = str(u["manager_id"])
 
     all_feedback = list(feedback_collection.find().sort("submitted_at", -1))
     for f in all_feedback:
@@ -629,9 +631,15 @@ def admin_update_user():
     data = request.get_json()
     user_id = data.get("id")
     new_role = data.get("role")
+    manager_id_str = data.get("manager_id", "")
     if new_role not in ("user", "low", "admin"):
         return jsonify({"error": "Invalid role."}), 400
-    users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
+    update = {"role": new_role}
+    if manager_id_str:
+        update["manager_id"] = ObjectId(manager_id_str)
+    else:
+        update["manager_id"] = None
+    users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": update})
     return jsonify({"success": True})
 
 
