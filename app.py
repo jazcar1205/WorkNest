@@ -559,10 +559,14 @@ def feedback():
 @app.route("/submit_feedback", methods=["POST"])
 @login_required
 def submit_feedback():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
+    date_val = data.get("date", "").strip()
+    fb_text  = data.get("feedback", "").strip()
+    if not date_val or not fb_text:
+        return jsonify({"error": "Missing fields"}), 400
     feedback_collection.insert_one({
-        "date": data.get("date"),
-        "feedback": data.get("feedback"),
+        "date": date_val,
+        "feedback": fb_text,
         "submitted_by": session.get("username"),
         "submitted_at": datetime.utcnow().isoformat()
     })
