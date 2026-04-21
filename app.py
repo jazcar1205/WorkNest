@@ -569,12 +569,12 @@ def feedback():
 @login_required
 def submit_feedback():
     data = request.get_json(silent=True) or {}
-    date_val = data.get("date", "").strip()
+    rating   = data.get("rating", "")
     fb_text  = data.get("feedback", "").strip()
-    if not date_val or not fb_text:
+    if not rating or not fb_text:
         return jsonify({"error": "Missing fields"}), 400
     feedback_collection.insert_one({
-        "date": date_val,
+        "rating": int(rating),
         "feedback": fb_text,
         "submitted_by": session.get("username"),
         "submitted_at": datetime.utcnow().isoformat()

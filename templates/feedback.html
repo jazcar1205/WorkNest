@@ -14,8 +14,8 @@
         <div id="form-view">
             <div class="section-title">Submit Feedback</div>
 
-            <label for="fb-date">Date</label>
-            <input type="date" id="fb-date" required>
+            <label for="fb-rating">Rating (1–10)</label>
+            <input type="number" id="fb-rating" min="1" max="10" placeholder="Enter a number from 1 to 10" required>
 
             <label for="fb-text">Feedback</label>
             <textarea id="fb-text" rows="6" placeholder="Write your feedback here…" required></textarea>
@@ -48,11 +48,11 @@
 
 <script>
 function submitFeedback() {
-    const date = document.getElementById('fb-date').value.trim();
+    const rating = document.getElementById('fb-rating').value.trim();
     const feedback = document.getElementById('fb-text').value.trim();
 
-    if (!date) {
-        alert('Please select a date.');
+    if (!rating || rating < 1 || rating > 10) {
+        alert('Please enter a rating between 1 and 10.');
         return;
     }
     if (!feedback) {
@@ -67,7 +67,7 @@ function submitFeedback() {
     fetch('/submit_feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, feedback })
+        body: JSON.stringify({ rating, feedback })
     })
     .then(r => r.json())
     .then(data => {
@@ -93,7 +93,7 @@ function submitFeedback() {
 }
 
 function submitAnother() {
-    document.getElementById('fb-date').value = '';
+    document.getElementById('fb-rating').value = '';
     document.getElementById('fb-text').value = '';
     document.getElementById('submit-btn').disabled = false;
     document.getElementById('submit-btn').textContent = 'Submit';
