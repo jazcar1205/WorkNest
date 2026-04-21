@@ -232,7 +232,32 @@ function nextPage() {
     if (currentPage < Math.ceil(filtered.length / PER_PAGE)) { currentPage++; renderPage(); }
 }
 
-document.addEventListener('DOMContentLoaded', renderPage);
+document.addEventListener('DOMContentLoaded', function() {
+    renderPage();
+    markOverdue();
+});
+
+// ── Overdue highlighting ────────────────────────────
+function markOverdue() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    allCards().forEach(function(card) {
+        const due = card.dataset.due;
+        const status = card.dataset.status;
+        if (!due || status === 'Completed') return;
+        const dueDate = new Date(due);
+        if (dueDate < today) {
+            card.classList.add('overdue-card');
+            const top = card.querySelector('.card-top');
+            if (top && !top.querySelector('.overdue-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'overdue-badge';
+                badge.textContent = 'Overdue';
+                top.appendChild(badge);
+            }
+        }
+    });
+}
 
 // ── Modal ──────────────────────────────────────────
 function openModal(row) {
@@ -531,6 +556,18 @@ window.onclick = function(e) {
 .priority-low    { background: #D1FAE5; color: #065F46; }
 .priority-medium { background: #FEF3C7; color: #92600A; }
 .priority-high   { background: #FEE2E2; color: #991B1B; }
+
+/* Overdue */
+.overdue-card { border-color: #FCA5A5 !important; }
+.overdue-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #FEE2E2;
+    color: #991B1B;
+}
 
 /* Validation */
 .req-star { color: #DC2626; }

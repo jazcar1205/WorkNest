@@ -67,6 +67,18 @@
 
 </div>
 
+<!-- CHARTS ROW -->
+<div class="charts-row">
+    <div class="section-card chart-card">
+        <p class="section-title">Items by Status</p>
+        <canvas id="statusChart" height="180"></canvas>
+    </div>
+    <div class="section-card chart-card">
+        <p class="section-title">Open Items by Type</p>
+        <canvas id="typeChart" height="180"></canvas>
+    </div>
+</div>
+
 <!-- BOTTOM ROW -->
 <div class="dash-body">
 
@@ -174,12 +186,63 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.getElementById('dash-date').textContent =
     new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+const openAll = {{ open_tasks + open_requests + open_tickets }};
+
+new Chart(document.getElementById('statusChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Open', 'In Progress', 'Completed'],
+        datasets: [{
+            data: [openAll, {{ in_progress }}, {{ completed }}],
+            backgroundColor: ['#FCA5A5', '#FCD34D', '#6EE7B7'],
+            borderColor:     ['#EF4444', '#F59E0B', '#10B981'],
+            borderWidth: 1.5,
+            borderRadius: 5,
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#F0E8E0' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Tasks', 'Requests', 'Tickets'],
+        datasets: [{
+            data: [{{ open_tasks }}, {{ open_requests }}, {{ open_tickets }}],
+            backgroundColor: ['#BFDBFE', '#DDD6FE', '#99F6E4'],
+            borderColor:     ['#3B82F6', '#8B5CF6', '#14B8A6'],
+            borderWidth: 1.5,
+        }]
+    },
+    options: {
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } }
+        },
+        cutout: '65%'
+    }
+});
 </script>
 
 <style>
+/* Charts */
+.charts-row {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+.chart-card { flex: 1; }
+
 /* Stat row */
 .stat-row {
     display: flex;
