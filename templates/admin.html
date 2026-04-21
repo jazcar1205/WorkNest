@@ -103,9 +103,14 @@
             <tr>
                 <td style="font-weight:600">{{ fb.submitted_by or '—' }}</td>
                 <td>
-                    <span class="rating-pill rating-{{ 'high' if fb.rating >= 8 else ('mid' if fb.rating >= 5 else 'low') }}">
-                        {{ fb.rating }}/10
+                    {% set r = fb.get('rating') %}
+                    {% if r is not none %}
+                    <span class="rating-pill rating-{{ 'high' if r >= 8 else ('mid' if r >= 5 else 'low') }}">
+                        {{ r }}/10
                     </span>
+                    {% else %}
+                    <span style="color:var(--text-muted)">—</span>
+                    {% endif %}
                 </td>
                 <td style="color:var(--text)">{{ fb.feedback }}</td>
                 <td style="color:var(--text-muted);white-space:nowrap">
