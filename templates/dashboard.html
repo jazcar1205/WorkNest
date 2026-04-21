@@ -94,7 +94,7 @@
                 <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ item.description }}</td>
                 <td><span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span></td>
                 <td style="color:var(--text-muted)">{{ item.assigned or '—' }}</td>
-                <td style="color:var(--text-muted)">{{ item.due or '—' }}</td>
+                <td style="color:var(--text-muted)">{{ item.due | fmtdate }}</td>
             </tr>
             {% endfor %}
             </tbody>

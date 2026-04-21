@@ -35,7 +35,7 @@
                          onclick="openApptModal(this)">
                         <div class="appt-title">{{ appt.title or 'Appointment' }}</div>
                         <div class="appt-dateline">
-                            <span class="appt-date-badge">{{ appt.date }}</span>
+                            <span class="appt-date-badge">{{ appt.date | fmtdate }}</span>
                             <span class="appt-time-badge" data-start="{{ appt.start_time or '' }}" data-end="{{ appt.end_time or '' }}"></span>
                         </div>
                         {% if appt.description %}
@@ -54,7 +54,29 @@
     <!-- RIGHT: Calendar -->
     <div class="appt-right">
         <div class="section-card">
-            <p class="section-title">{{ month_name }}</p>
+            <div class="cal-nav">
+                {% if has_prev %}
+                <a href="/appointments?year={{ prev_year }}&month={{ prev_month }}" class="cal-nav-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </a>
+                {% else %}
+                <span class="cal-nav-btn cal-nav-disabled">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
+                {% endif %}
+
+                <p class="section-title" style="margin:0">{{ month_name }}</p>
+
+                {% if has_next %}
+                <a href="/appointments?year={{ next_year }}&month={{ next_month }}" class="cal-nav-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                {% else %}
+                <span class="cal-nav-btn cal-nav-disabled">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+                {% endif %}
+            </div>
 
             <div class="calendar">
                 <div class="cal-day-header">Sun</div>
@@ -120,14 +142,12 @@
             </div>
 
             <label>Invite <span class="req-star">*</span></label>
-            <input type="text" name="invite" placeholder="Person's name" list="team-datalist" required>
-            {% if assignable_users %}
-            <datalist id="team-datalist">
-                {% for u in assignable_users %}
-                <option value="{{ u }}">
+            <select name="invite" required>
+                <option value="" disabled selected>Select a person</option>
+                {% for u in all_users %}
+                <option value="{{ u }}">{{ u }}</option>
                 {% endfor %}
-            </datalist>
-            {% endif %}
+            </select>
 
             <label>Description</label>
             <textarea name="description" placeholder="What's this meeting about?" style="height:100px"></textarea>
@@ -169,7 +189,12 @@
         </div>
 
         <label>Invite <span class="req-star">*</span></label>
-        <input id="appt-invite" disabled>
+        <select id="appt-invite" disabled>
+            <option value="" disabled>Select a person</option>
+            {% for u in all_users %}
+            <option value="{{ u }}">{{ u }}</option>
+            {% endfor %}
+        </select>
 
         <label>Description</label>
         <textarea id="appt-description" style="height:80px" disabled></textarea>
@@ -392,6 +417,36 @@ window.onclick = function(e) {
 .appt-person {
     font-size: 11.5px;
     color: var(--text-light);
+}
+
+/* Calendar nav */
+.cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.cal-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--brown);
+    text-decoration: none;
+    background: #F5EDE4;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+}
+
+.cal-nav-btn:hover { background: var(--brown-mid); color: white; }
+
+.cal-nav-disabled {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
 }
 
 /* Calendar */

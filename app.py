@@ -16,6 +16,7 @@ task_collection = db["tasks"]
 req_collection = db["requests"]
 tick_collection = db["tickets"]
 users_collection = db["users"]
+feedback_collection = db["feedback"]
 
 
 # ── Auth helpers ──────────────────────────────────────────────────────────────
@@ -35,6 +36,17 @@ def inject_user():
         "current_username": session.get("username", ""),
         "current_role": session.get("role", "")
     }
+
+
+@app.template_filter('fmtdate')
+def fmt_date(value):
+    if not value:
+        return '—'
+    try:
+        y, m, d = str(value).strip().split('-')
+        return f"{m}/{d}/{y}"
+    except Exception:
+        return value or '—'
 
 
 def get_assignable_usernames():
@@ -284,23 +296,66 @@ def appointments():
     assignable_users = get_assignable_usernames()
     now = datetime.today()
     today_str = now.strftime("%Y-%m-%d")
-    month_str = now.strftime("%Y-%m")
 
-    # Filter: show if created_by == username OR invite == username OR no created_by field (legacy)
-    upcoming_all = list(ap_collection.find({
-        "date": {"$gte": today_str}
-    }).sort("date", 1))
+    # Parse requested month from query params, clamp to ±2 months from today
+    try:
+        view_year  = int(request.args.get("year",  now.year))
+        view_month = int(request.args.get("month", now.month))
+        view_date  = datetime(view_year, view_month, 1)
+    except (ValueError, TypeError):
+        view_date = datetime(now.year, now.month, 1)
 
+    min_date = datetime(now.year, now.month, 1)
+    # shift by -2 months
+    m = min_date.month - 2
+    y = min_date.year + (m - 1) // 12
+    m = (m - 1) % 12 + 1
+    min_date = datetime(y, m, 1)
+
+    max_date = datetime(now.year, now.month, 1)
+    # shift by +2 months
+    m = max_date.month + 2
+    y = max_date.year + (m - 1) // 12
+    m = (m - 1) % 12 + 1
+    max_date = datetime(y, m, 1)
+
+    if view_date < min_date:
+        view_date = min_date
+    if view_date > max_date:
+        view_date = max_date
+
+    view_year  = view_date.year
+    view_month = view_date.month
+    month_str  = view_date.strftime("%Y-%m")
+
+    # Prev / next month links
+    def shift_month(year, month, delta):
+        m = month + delta
+        y = year + (m - 1) // 12
+        m = (m - 1) % 12 + 1
+        return y, m
+
+    prev_year, prev_month = shift_month(view_year, view_month, -1)
+    next_year, next_month = shift_month(view_year, view_month, +1)
+
+    prev_date = datetime(prev_year, prev_month, 1)
+    next_date = datetime(next_year, next_month, 1)
+
+    has_prev = prev_date >= min_date
+    has_next = next_date <= max_date
+
+    # Upcoming: always from today forward, filtered by user
+    upcoming_all = list(ap_collection.find({"date": {"$gte": today_str}}).sort("date", 1))
     upcoming = [
         a for a in upcoming_all
         if "created_by" not in a
         or a.get("created_by") == username
         or a.get("invite") == username
     ]
-
     for a in upcoming:
         a["_id"] = str(a["_id"])
 
+    # Calendar appointments for the viewed month
     month_appts_all = list(ap_collection.find({"date": {"$regex": f"^{month_str}"}}))
     month_appts = [
         a for a in month_appts_all
@@ -320,15 +375,27 @@ def appointments():
                 pass
 
     cal = cal_module.Calendar(firstweekday=6)
-    cal_weeks = cal.monthdayscalendar(now.year, now.month)
+    cal_weeks = cal.monthdayscalendar(view_year, view_month)
+
+    # today_day only highlights if we're viewing the current month
+    today_day = now.day if (view_year == now.year and view_month == now.month) else -1
+
+    all_users = [u["username"] for u in users_collection.find({}, {"username": 1})]
 
     return render_template("appointments.html",
         appointments=upcoming,
         cal_weeks=cal_weeks,
-        month_name=now.strftime("%B %Y"),
-        today_day=now.day,
+        month_name=view_date.strftime("%B %Y"),
+        today_day=today_day,
         appt_by_day=appt_by_day,
-        assignable_users=assignable_users
+        assignable_users=assignable_users,
+        all_users=all_users,
+        has_prev=has_prev,
+        has_next=has_next,
+        prev_year=prev_year,
+        prev_month=prev_month,
+        next_year=next_year,
+        next_month=next_month,
     )
 
 
@@ -481,6 +548,25 @@ def dashboard():
         total_all=total_all,
         recent_items=recent_items
     )
+
+
+@app.route("/feedback")
+@login_required
+def feedback():
+    return render_template("feedback.html")
+
+
+@app.route("/submit_feedback", methods=["POST"])
+@login_required
+def submit_feedback():
+    data = request.get_json()
+    feedback_collection.insert_one({
+        "date": data.get("date"),
+        "feedback": data.get("feedback"),
+        "submitted_by": session.get("username"),
+        "submitted_at": datetime.utcnow().isoformat()
+    })
+    return jsonify({"success": True})
 
 
 app.run(host="0.0.0.0", port=5055)
