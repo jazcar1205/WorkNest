@@ -573,4 +573,4 @@ def submit_feedback():
     return jsonify({"success": True})
 
 
-app.run(host="0.0.0.0", port=5055)
+app.run(host="0.0.0.0", port=5055, debug=True)
