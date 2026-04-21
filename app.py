@@ -34,6 +34,17 @@ def login_required(f):
     return decorated
 
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "username" not in session:
+            return redirect(url_for("login"))
+        if session.get("role") != "admin":
+            return redirect(url_for("dashboard"))
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.context_processor
 def inject_user():
     return {
@@ -571,6 +582,67 @@ def submit_feedback():
         "submitted_by": session.get("username"),
         "submitted_at": datetime.utcnow().isoformat()
     })
+    return jsonify({"success": True})
+
+
+@app.route("/admin")
+@admin_required
+def admin_panel():
+    users = list(users_collection.find({}, {"password": 0}))
+    for u in users:
+        u["_id"] = str(u["_id"])
+
+    all_feedback = list(feedback_collection.find().sort("submitted_at", -1))
+    for f in all_feedback:
+        f["_id"] = str(f["_id"])
+
+    return render_template("admin.html",
+        users=users,
+        all_feedback=all_feedback,
+        total_users=len(users),
+        total_tasks=task_collection.count_documents({}),
+        total_requests=req_collection.count_documents({}),
+        total_tickets=tick_collection.count_documents({}),
+        current_user_id=session.get("user_id")
+    )
+
+
+@app.route("/admin/create_user", methods=["POST"])
+@admin_required
+def admin_create_user():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    role = data.get("role", "user")
+    if not username:
+        return jsonify({"error": "Username is required."}), 400
+    if role not in ("user", "low", "admin"):
+        return jsonify({"error": "Invalid role."}), 400
+    if users_collection.find_one({"username": username}):
+        return jsonify({"error": "That username is already taken."}), 400
+    users_collection.insert_one({"username": username, "role": role})
+    return jsonify({"success": True})
+
+
+@app.route("/admin/update_user", methods=["POST"])
+@admin_required
+def admin_update_user():
+    data = request.get_json()
+    user_id = data.get("id")
+    new_role = data.get("role")
+    if new_role not in ("user", "low", "admin"):
+        return jsonify({"error": "Invalid role."}), 400
+    users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": new_role}})
+    return jsonify({"success": True})
+
+
+@app.route("/admin/delete_user", methods=["POST"])
+@admin_required
+def admin_delete_user():
+    data = request.get_json()
+    user_id = data.get("id")
+    if user_id == session.get("user_id"):
+        return jsonify({"error": "You cannot delete your own account."}), 400
+    users_collection.delete_one({"_id": ObjectId(user_id)})
     return jsonify({"success": True})
 
 
