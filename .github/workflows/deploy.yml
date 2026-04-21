@@ -21,8 +21,19 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: MONGO_URI,SECRET_KEY
           script: |
             set -e
             cd ~/WorkNest
+
+            # Write .env from GitHub Secrets (overwrites on every deploy)
+            cat > .env <<EOF
+            MONGO_URI=$MONGO_URI
+            SECRET_KEY=$SECRET_KEY
+            EOF
+
             bash run.sh
             tail -n 50 log.txt
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
