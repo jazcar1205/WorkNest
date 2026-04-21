@@ -170,6 +170,53 @@
         }
 
         .login-note a:hover { text-decoration: underline; }
+
+        .demo-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0 16px;
+            color: #C0ADA0;
+            font-size: 12px;
+        }
+        .demo-divider::before,
+        .demo-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #E4D8CC;
+        }
+
+        .demo-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-demo {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid #E4D8CC;
+            background: #FDFAF7;
+            color: #5A3A20;
+            transition: background 0.12s, border-color 0.12s;
+        }
+        .btn-demo:hover { background: #F5EDE4; border-color: #C87941; }
+
+        .btn-demo-admin {
+            background: #150700;
+            color: #C87941;
+            border-color: #2A1208;
+        }
+        .btn-demo-admin:hover { background: #1E0B00; border-color: #C87941; }
     </style>
 </head>
 <body>
@@ -216,6 +263,18 @@
         </form>
 
         <p class="login-note">Don't have an account? <a href="/register">Create one</a></p>
+
+        <div class="demo-divider">preview without an account</div>
+        <div class="demo-row">
+            <a href="/demo/user" class="btn-demo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                View as User
+            </a>
+            <a href="/demo/admin" class="btn-demo btn-demo-admin">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                View as Admin
+            </a>
+        </div>
     </div>
 </div>
 

@@ -28,6 +28,11 @@
         <div class="stat-value">{{ total_tickets }}</div>
         <div class="stat-label">Tickets</div>
     </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ demo_views_user + demo_views_admin }}</div>
+        <div class="stat-label">Demo Views</div>
+        <div class="stat-breakdown">{{ demo_views_user }} user · {{ demo_views_admin }} admin</div>
+    </div>
 </div>
 
 <!-- Users -->
@@ -244,7 +249,7 @@ function deleteUser(userId, username) {
 <style>
 .admin-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -271,6 +276,12 @@ function deleteUser(userId, username) {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-muted);
+}
+
+.stat-breakdown {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 4px;
 }
 
 .inline-select {

@@ -477,6 +477,37 @@
         .role-badge.role-user  { background: rgba(100,160,100,0.22); color: #6BAE6B; }
         .role-badge.role-low   { background: rgba(160,160,200,0.22); color: #9898CC; }
 
+        /* ── DEMO BANNER ─────────────────────────────── */
+        .demo-banner {
+            background: linear-gradient(90deg, #80461B, #C87941);
+            color: white;
+            padding: 10px 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .demo-banner-btn {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 12.5px;
+            padding: 5px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.35);
+            transition: background 0.12s;
+        }
+        .demo-banner-btn:hover { background: rgba(255,255,255,0.1); }
+
+        .demo-banner-cta {
+            background: white;
+            color: #80461B;
+            border-color: white;
+        }
+        .demo-banner-cta:hover { background: #FFF7ED; }
+
         /* ── LOGOUT ITEM ─────────────────────────────── */
         .logout-item {
             margin-top: 8px;
@@ -598,6 +629,17 @@
 
     <!-- MAIN CONTENT -->
     <div class="main-wrap">
+        {% if is_demo %}
+        <div class="demo-banner">
+            <span>
+                <strong>Demo mode</strong> — previewing as {{ current_role }}. All changes are disabled.
+            </span>
+            <div style="display:flex;gap:10px;align-items:center">
+                <a href="/login" class="demo-banner-btn">Sign in</a>
+                <a href="/register" class="demo-banner-btn demo-banner-cta">Create Account</a>
+            </div>
+        </div>
+        {% endif %}
         <div class="page-content">
             {% block content %}{% endblock %}
         </div>

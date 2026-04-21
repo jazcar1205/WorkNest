@@ -21,6 +21,7 @@ req_collection = db["requests"]
 tick_collection = db["tickets"]
 users_collection = db["users"]
 feedback_collection = db["feedback"]
+demo_logs = db["demo_logs"]
 
 
 # ── Auth helpers ──────────────────────────────────────────────────────────────
@@ -45,11 +46,23 @@ def admin_required(f):
     return decorated
 
 
+def demo_readonly(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if session.get("is_demo"):
+            if request.is_json:
+                return jsonify({"error": "Demo mode — changes are disabled."}), 403
+            return redirect(url_for("dashboard"))
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.context_processor
 def inject_user():
     return {
         "current_username": session.get("username", ""),
-        "current_role": session.get("role", "")
+        "current_role": session.get("role", ""),
+        "is_demo": session.get("is_demo", False)
     }
 
 
@@ -71,6 +84,11 @@ def get_assignable_usernames():
 
     if not role or not username:
         return [username] if username else []
+
+    if session.get("is_demo"):
+        if role == "admin":
+            return [u["username"] for u in users_collection.find({}, {"username": 1})]
+        return [username]
 
     if role == "admin":
         user_id = ObjectId(user_id_str)
@@ -197,6 +215,24 @@ def register():
     return render_template("register.html", error=error)
 
 
+@app.route("/demo/<role>")
+def demo_access(role):
+    if role not in ("user", "admin"):
+        return redirect(url_for("login"))
+    demo_logs.insert_one({
+        "role": role,
+        "accessed_at": datetime.utcnow().isoformat(),
+        "ip": request.remote_addr
+    })
+    session.clear()
+    session["username"] = "Demo " + role.capitalize()
+    session["role"] = role
+    session["user_id"] = "demo"
+    session["manager_id"] = None
+    session["is_demo"] = True
+    return redirect(url_for("dashboard"))
+
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -272,6 +308,7 @@ def creation():
 
 @app.route("/create_item", methods=["POST"])
 @login_required
+@demo_readonly
 def create_item():
     item_type = request.form.get("type")
 
@@ -412,6 +449,7 @@ def appointments():
 
 @app.route("/create_appointment", methods=["POST"])
 @login_required
+@demo_readonly
 def create_appointment():
     data = {
         "title":       request.form.get("title"),
@@ -428,6 +466,7 @@ def create_appointment():
 
 @app.route("/update_appointment", methods=["POST"])
 @login_required
+@demo_readonly
 def update_appointment():
     data = request.get_json()
     appt_id = data.get("id")
@@ -449,6 +488,7 @@ def update_appointment():
 
 @app.route("/delete_appointment", methods=["POST"])
 @login_required
+@demo_readonly
 def delete_appointment():
     data = request.get_json()
     ap_collection.delete_one({"_id": ObjectId(data.get("id"))})
@@ -457,6 +497,7 @@ def delete_appointment():
 
 @app.route("/delete_item", methods=["POST"])
 @login_required
+@demo_readonly
 def delete_item():
     data = request.json
     item_id = data.get("id")
@@ -471,6 +512,7 @@ def delete_item():
 
 @app.route("/update_item", methods=["POST"])
 @login_required
+@demo_readonly
 def update_item():
     data = request.get_json()
     item_id = data.get("id")
@@ -570,6 +612,7 @@ def feedback():
 
 @app.route("/submit_feedback", methods=["POST"])
 @login_required
+@demo_readonly
 def submit_feedback():
     data = request.get_json(silent=True) or {}
     rating   = data.get("rating", "")
@@ -605,12 +648,15 @@ def admin_panel():
         total_tasks=task_collection.count_documents({}),
         total_requests=req_collection.count_documents({}),
         total_tickets=tick_collection.count_documents({}),
-        current_user_id=session.get("user_id")
+        current_user_id=session.get("user_id"),
+        demo_views_user=demo_logs.count_documents({"role": "user"}),
+        demo_views_admin=demo_logs.count_documents({"role": "admin"})
     )
 
 
 @app.route("/admin/create_user", methods=["POST"])
 @admin_required
+@demo_readonly
 def admin_create_user():
     data = request.get_json()
     username = data.get("username", "").strip()
@@ -627,6 +673,7 @@ def admin_create_user():
 
 @app.route("/admin/update_user", methods=["POST"])
 @admin_required
+@demo_readonly
 def admin_update_user():
     data = request.get_json()
     user_id = data.get("id")
@@ -645,6 +692,7 @@ def admin_update_user():
 
 @app.route("/admin/delete_user", methods=["POST"])
 @admin_required
+@demo_readonly
 def admin_delete_user():
     data = request.get_json()
     user_id = data.get("id")
