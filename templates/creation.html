@@ -15,9 +15,9 @@
             <div class="create-col">
                 <label>Type</label>
                 <select name="type">
-                    <option>Task</option>
-                    <option>Request</option>
-                    <option>Ticket</option>
+                    <option value="Task"    {% if default_type == 'Task'    %}selected{% endif %}>Task</option>
+                    <option value="Request" {% if default_type == 'Request' %}selected{% endif %}>Request</option>
+                    <option value="Ticket"  {% if default_type == 'Ticket'  %}selected{% endif %}>Ticket</option>
                 </select>
 
                 <label>Assigned To <span class="req-star">*</span></label>
@@ -38,6 +38,13 @@
                     </div>
                 </div>
 
+                <label>Priority</label>
+                <select name="priority" id="prioritySelect" onchange="updatePreview()">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                </select>
+
                 <label>Status</label>
                 <select name="status" id="statusSelect" onchange="updatePreview()">
                     <option value="Open">Open</option>
@@ -47,6 +54,7 @@
 
                 <div class="preview-row">
                     <span style="font-size:12px;color:var(--text-muted)">Preview</span>
+                    <span id="priorityPreview" class="priority-badge priority-medium">Medium</span>
                     <span id="statusPreview" class="status open">Open</span>
                 </div>
             </div>
@@ -67,10 +75,15 @@
 
 <script>
 function updatePreview() {
-    const select = document.getElementById("statusSelect");
-    const preview = document.getElementById("statusPreview");
-    preview.className = "status " + select.value.toLowerCase().replace(" ", "-");
-    preview.textContent = select.value;
+    const sSelect = document.getElementById("statusSelect");
+    const sPreview = document.getElementById("statusPreview");
+    sPreview.className = "status " + sSelect.value.toLowerCase().replace(" ", "-");
+    sPreview.textContent = sSelect.value;
+
+    const pSelect = document.getElementById("prioritySelect");
+    const pPreview = document.getElementById("priorityPreview");
+    pPreview.className = "priority-badge priority-" + pSelect.value.toLowerCase();
+    pPreview.textContent = pSelect.value;
 }
 </script>
 

@@ -10,7 +10,7 @@
             <h1 class="page-title">{{ title }}</h1>
             <p class="page-subtitle" id="resultCount"></p>
         </div>
-        <a href="/create" class="btn btn-primary">+ New</a>
+        <a href="/create?type={{ title[:-1] }}" class="btn btn-primary">+ New</a>
     </div>
 
     <!-- FILTER BAR -->
@@ -19,8 +19,20 @@
             <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by description or assignee…" oninput="onFilter()">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by description…" oninput="onFilter()">
         </div>
+        <select id="assignedFilter" class="filter-select" onchange="onFilter()">
+            <option value="">All Assignees</option>
+            {% for u in assignable_users %}
+            <option value="{{ u }}">{{ u }}</option>
+            {% endfor %}
+        </select>
+        <select id="priorityFilter" class="filter-select" onchange="onFilter()">
+            <option value="">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
         <select id="statusFilter" class="filter-select" onchange="onFilter()">
             <option value="">All Statuses</option>
             <option value="Open">Open</option>
@@ -42,6 +54,7 @@
              data-id="{{ item._id }}"
              data-description="{{ item.description }}"
              data-status="{{ item.status }}"
+             data-priority="{{ item.priority or 'Medium' }}"
              data-assigned="{{ item.assigned or '' }}"
              data-created="{{ item.created or '' }}"
              data-due="{{ item.due or '' }}"
@@ -49,6 +62,7 @@
 
             <div class="card-top">
                 <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+                <span class="priority-badge priority-{{ (item.priority or 'Medium')|lower }}">{{ item.priority or 'Medium' }}</span>
             </div>
 
             <div class="card-desc">{{ item.description }}</div>
@@ -106,12 +120,24 @@
         <label>Description <span class="req-star">*</span></label>
         <input id="modal-title" required disabled>
 
-        <label>Status</label>
-        <select id="modal-status" disabled>
-            <option>Open</option>
-            <option>In Progress</option>
-            <option>Completed</option>
-        </select>
+        <div style="display:flex;gap:16px">
+            <div style="flex:1">
+                <label>Status</label>
+                <select id="modal-status" disabled>
+                    <option>Open</option>
+                    <option>In Progress</option>
+                    <option>Completed</option>
+                </select>
+            </div>
+            <div style="flex:1">
+                <label>Priority</label>
+                <select id="modal-priority" disabled>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+        </div>
 
         <label>Assigned <span class="req-star">*</span></label>
         <input id="modal-assigned" list="assignable-list" required disabled>
@@ -157,14 +183,16 @@ function allCards() {
 function onFilter() { currentPage = 1; renderPage(); }
 
 function getFiltered() {
-    const q      = (document.getElementById('searchInput').value || '').toLowerCase();
-    const status = document.getElementById('statusFilter').value;
+    const q        = (document.getElementById('searchInput').value || '').toLowerCase();
+    const assigned = document.getElementById('assignedFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
+    const status   = document.getElementById('statusFilter').value;
     return allCards().filter(function(card) {
-        const matchQ = !q ||
-            card.dataset.description.toLowerCase().includes(q) ||
-            card.dataset.assigned.toLowerCase().includes(q);
-        const matchS = !status || card.dataset.status === status;
-        return matchQ && matchS;
+        const matchQ = !q || card.dataset.description.toLowerCase().includes(q);
+        const matchA = !assigned || card.dataset.assigned === assigned;
+        const matchP = !priority || card.dataset.priority === priority;
+        const matchS = !status   || card.dataset.status   === status;
+        return matchQ && matchA && matchP && matchS;
     });
 }
 
@@ -208,12 +236,13 @@ document.addEventListener('DOMContentLoaded', renderPage);
 
 // ── Modal ──────────────────────────────────────────
 function openModal(row) {
-    document.getElementById('modal-id').value       = row.dataset.id;
-    document.getElementById('modal-title').value    = row.dataset.description || '';
-    document.getElementById('modal-status').value   = row.dataset.status || '';
-    document.getElementById('modal-assigned').value = row.dataset.assigned || '';
-    document.getElementById('modal-created').value  = row.dataset.created || '';
-    document.getElementById('modal-due').value      = row.dataset.due || '';
+    document.getElementById('modal-id').value        = row.dataset.id;
+    document.getElementById('modal-title').value     = row.dataset.description || '';
+    document.getElementById('modal-status').value    = row.dataset.status || '';
+    document.getElementById('modal-priority').value  = row.dataset.priority || 'Medium';
+    document.getElementById('modal-assigned').value  = row.dataset.assigned || '';
+    document.getElementById('modal-created').value   = row.dataset.created || '';
+    document.getElementById('modal-due').value       = row.dataset.due || '';
     hideModalError();
     disableFields();
     document.getElementById('itemModal').style.display = 'block';
@@ -259,6 +288,7 @@ function saveEdit() {
         id:          document.getElementById('modal-id').value,
         description: desc,
         status:      document.getElementById('modal-status').value,
+        priority:    document.getElementById('modal-priority').value,
         assigned:    assigned,
         created:     created,
         due:         document.getElementById('modal-due').value
@@ -402,7 +432,14 @@ window.onclick = function(e) {
     transform: translateY(-1px);
 }
 
-.card-top    { flex-shrink: 0; margin-bottom: 8px; }
+.card-top {
+    flex-shrink: 0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
 
 .card-desc {
     font-size: 13.5px;
@@ -480,6 +517,20 @@ window.onclick = function(e) {
     min-width: 110px;
     text-align: center;
 }
+
+/* Priority badges */
+.priority-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.priority-low    { background: #D1FAE5; color: #065F46; }
+.priority-medium { background: #FEF3C7; color: #92600A; }
+.priority-high   { background: #FEE2E2; color: #991B1B; }
 
 /* Validation */
 .req-star { color: #DC2626; }

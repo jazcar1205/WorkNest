@@ -1,223 +1,157 @@
 # WorkNest
 **A Unified Task, Request, Ticket, and Appointments Manager**
+
 ---
+
 ## Overview
-WorkNest is a simple, web-based system designed to centralize:
+WorkNest is a web-based work management system built with Flask and MongoDB. It centralizes:
 - Tasks
 - Requests
 - Tickets
 - Appointments
+- Feedback
 
 ### Value
-- One system instead of many tools  
-- Less confusion  
-- Better accountability  
-- Increased productivity  
-- Faster than traditional enterprise tools  
+- One system instead of many tools
+- Role-based access keeps the right people accountable
+- Clean, fast interface — no bloat
+- Better visibility across all work in one dashboard
+
 ---
+
+## Tech Stack
+- **Backend:** Python / Flask
+- **Database:** MongoDB Atlas
+- **Frontend:** Jinja2 templates, vanilla JS/CSS
+- **Deployment:** GitHub Actions → EC2 (via SSH)
+
+---
+
+## Running Locally
+
+```bash
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # Mac/Linux
+
+# Install dependencies
+pip install -r requirement.txt
+
+# Start the server (runs on port 5055)
+python app.py
+```
+
+---
+
 ## Core Functionality
-- [x] Create items (tasks, requests, tickets)
-- [x] View all items in one place
-- [x] Edit items
+
+- [x] Create items (Tasks, Requests, Tickets)
+- [x] View all items by type
+- [x] Edit items via modal
 - [x] Delete items
-- [ ] Assign ownership
-- [ ] Set and track priorities
-- [x] Status tracking:
-  - Open
-  - In Progress
-  - Completed
-- [x] Store:
-  - Description
-  - Assigned person
-  - Status
-  - Created date
-  - Due date
----
-## Unified System Logic
-- [x] All item types use a consistent structure
-- [x] Same UI across:
-  - Tasks
-  - Requests
-  - Tickets
-  - Appointments
-- [x] Unified dashboard for all items
-- [x] Easy switching between categories
----
-## User Experience (UX)
-- [x] Clean and simple interface
-- [x] Easy navigation
-- [x] Click-to-view item details (modal)
-- [x] Clear actions:
-  - Create
-  - Edit
-  - Delete
-- [x] Friendly messages:
-  - Empty states
-  - Success notifications
-  - Error feedback
----
-## Search & Filtering
-- [ ] Search by description
-- [ ] Filter by:
-  - Status
-  - Assigned user
-  - Type (Task, Ticket, Request, Appointment)
-- [ ] Sort by:
-  - Due date
-  - Created date
-  - Priority
----
-## Dashboard
-- [ ] Total items
-- [x] Open items
-- [x] In progress items
-- [x] Completed items
-- [x] Breakdown by type:
-  - Tasks
-  - Tickets
-  - Requests
-  - Appointments
-- [ ] charts (bar/pie)
-- [ ] Trend tracking
----
-## Appointments
-- [x] Schedule date & time
-- [x] View upcoming appointments
-- [x] Sorted by date
----
-## Users & Ownership
-- [ ] User login system
-- [ ] Each item has an owner
-- [ ] “Assigned to me” view
-- [ ] Permissions:
-  - Who can edit/delete items
----
-## Security
-- [ ] Input validation
-- [ ] Prevent empty or invalid data
-- [ ] Secure routes (authentication required)
-- [ ] Protect database credentials (environment variables)
----
-## Data Integrity
-- [ ] Proper date formatting
-- [ ] Handle missing fields safely
----
-## Future Enhancements
-- [ ] Activity logs
-- [ ] Comments on items
+- [x] Assign items to users
+- [x] Status tracking: Open / In Progress / Completed
+- [x] Store description, assigned person, status, created date, due date
 - [ ] Priority levels (Low, Medium, High)
-- [ ] Real-time updates
-- [ ] Role-based access (Admin/User)
 
+---
 
-**A Unified Task, Request, Ticket, and Appointments Manager**
----
-## Overview
-WorkNest is a simple, web-based system designed to centralize:
-- Tasks
-- Requests
-- Tickets
-- Appointments
-
-### Value
-- One system instead of many tools  
-- Less confusion  
-- Better accountability  
-- Increased productivity  
-- Faster than traditional enterprise tools  
----
-## Core Functionality
-- [x] Create items (tasks, requests, tickets)
-- [x] View all items in one place
-- [x] Edit items
-- [x] Delete items
-- [ ] Assign ownership
-- [ ] Set and track priorities
-- [x] Status tracking:
-  - Open
-  - In Progress
-  - Completed
-- [x] Store:
-  - Description
-  - Assigned person
-  - Status
-  - Created date
-  - Due date
----
-## Unified System Logic
-- [x] All item types use a consistent structure
-- [x] Same UI across:
-  - Tasks
-  - Requests
-  - Tickets
-  - Appointments
-- [x] Unified dashboard for all items
-- [x] Easy switching between categories
----
-## User Experience (UX)
-- [x] Clean and simple interface
-- [x] Easy navigation
-- [x] Click-to-view item details (modal)
-- [x] Clear actions:
-  - Create
-  - Edit
-  - Delete
-- [x] Friendly messages:
-  - Empty states
-  - Success notifications
-  - Error feedback
----
 ## Search & Filtering
-- [ ] Search by description
-- [ ] Filter by:
-  - Status
-  - Assigned user
-  - Type (Task, Ticket, Request, Appointment)
-- [ ] Sort by:
-  - Due date
-  - Created date
-  - Priority
+
+- [x] Search by description or assignee (live filter)
+- [x] Filter by status (Open / In Progress / Completed)
+- [ ] Filter by assigned user (dropdown)
+- [ ] Sort by due date, created date, or priority
+
 ---
+
 ## Dashboard
-- [ ] Total items
-- [x] Open items
-- [x] In progress items
-- [x] Completed items
-- [x] Breakdown by type:
-  - Tasks
-  - Tickets
-  - Requests
-  - Appointments
-- [ ] charts (bar/pie)
-- [ ] Trend tracking
+
+- [x] Total item count
+- [x] Open items count
+- [x] In Progress count
+- [x] Completed count
+- [x] Breakdown by type (Tasks, Requests, Tickets)
+- [x] Work summary with progress bars
+- [x] Recent items table (clickable, links to item)
+- [ ] Bar / pie charts
+- [ ] Trend tracking over time
+
 ---
+
 ## Appointments
-- [x] Schedule date & time
-- [x] View upcoming appointments
-- [x] Sorted by date
+
+- [x] Schedule with title, date, start time, end time
+- [x] Invite a team member
+- [x] Optional description
+- [x] View upcoming appointments list
+- [x] Calendar view (current month)
+- [x] Navigate ±2 months on the calendar
+- [x] Appointments filtered per user (created by or invited)
+- [x] Edit and delete appointments
+
 ---
-## Users & Ownership
-- [ ] User login system
-- [ ] Each item has an owner
-- [ ] “Assigned to me” view
-- [ ] Permissions:
-  - Who can edit/delete items
+
+## Feedback
+
+- [x] Submit feedback with date and text
+- [x] Thank-you confirmation after submission
+- [x] Option to submit another or return to home
+
 ---
+
+## Users & Access Control
+
+- [x] User registration and login
+- [x] First-time password setup flow
+- [x] Role-based access: **Admin**, **User**, **Low**
+  - **Admin** — sees and manages all items; manages their team
+  - **User** — sees all items; can assign to peers under same manager
+  - **Low** — sees only items assigned to them
+- [x] "My Work" view — items assigned to the logged-in user
+- [x] Appointments filtered to user's own or invited
+- [ ] Edit/delete permissions enforced by role (UI-level only currently)
+
+---
+
 ## Security
-- [ ] Input validation
-- [ ] Prevent empty or invalid data
-- [ ] Secure routes (authentication required)
-- [ ] Protect database credentials (environment variables)
+
+- [x] Authentication required on all routes (`@login_required`)
+- [x] Passwords hashed with Werkzeug (`generate_password_hash`)
+- [x] Session-based auth with Flask sessions
+- [x] Input validation on required fields (client + server)
+- [ ] MongoDB credentials moved to environment variables (currently hardcoded)
+
 ---
+
 ## Data Integrity
-- [ ] Proper date formatting
-- [ ] Handle missing fields safely
+
+- [x] Consistent date formatting across all views (`MM/DD/YYYY`)
+- [x] Missing fields handled safely (display `—` when empty)
+- [x] Empty states shown when no items exist
+
 ---
+
+## Deployment
+
+Pushing to `main` triggers GitHub Actions (`.github/workflows/deploy.yml`), which:
+1. SSHs into the EC2 instance
+2. Pulls the latest code
+3. Rebuilds the virtual environment
+4. Kills the running Flask process and restarts via `nohup`
+
+**Required GitHub Secrets:** `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`
+
+---
+
 ## Future Enhancements
-- [ ] Activity logs
+
+- [ ] Priority levels on items (Low / Medium / High)
+- [ ] Filter and sort controls on item list pages
+- [ ] Dashboard bar / pie charts
+- [ ] Activity log per item
 - [ ] Comments on items
-- [ ] Priority levels (Low, Medium, High)
-- [ ] Real-time updates
-- [ ] Role-based access (Admin/User)
-
-
+- [ ] Real-time updates (WebSockets)
+- [ ] Move database credentials to environment variables
+- [ ] Role-enforced edit/delete (server-side permission checks)

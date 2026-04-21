@@ -5,11 +5,15 @@ from datetime import datetime
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import calendar as cal_module
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "worknest-secret-2024"
+app.secret_key = os.getenv("SECRET_KEY")
 
-client = MongoClient("mongodb+srv://jazcarlos4_db_user:kSfIBaCBdX0ay29n@type-db.u1wzklp.mongodb.net/?appName=type-db")
+client = MongoClient(os.getenv("MONGO_URI"))
 db = client["type-db"]
 ap_collection = db["appointments"]
 task_collection = db["tasks"]
@@ -257,7 +261,10 @@ def open_requests():
 def creation():
     assignable_users = get_assignable_usernames()
     current_username = session.get("username")
-    return render_template("creation.html", assignable_users=assignable_users, current_username=current_username)
+    default_type = request.args.get("type", "Task")
+    if default_type not in ("Task", "Request", "Ticket"):
+        default_type = "Task"
+    return render_template("creation.html", assignable_users=assignable_users, current_username=current_username, default_type=default_type)
 
 
 @app.route("/create_item", methods=["POST"])
@@ -268,6 +275,7 @@ def create_item():
     item_data = {
         "assigned": request.form.get("assigned"),
         "status": request.form.get("status"),
+        "priority": request.form.get("priority", "Medium"),
         "description": request.form.get("description"),
         "created": request.form.get("created"),
         "due": request.form.get("due"),
@@ -470,6 +478,7 @@ def update_item():
     updated_data = {
         "description": data.get("description"),
         "status":      data.get("status"),
+        "priority":    data.get("priority"),
         "assigned":    data.get("assigned"),
         "created":     data.get("created"),
         "due":         data.get("due")
