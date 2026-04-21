@@ -159,15 +159,12 @@ def set_password():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    admins = list(users_collection.find({"role": "admin"}, {"username": 1}))
     error = None
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         confirm = request.form.get("confirm_password", "")
-        role = request.form.get("role", "user")
-        manager_id_str = request.form.get("manager_id", "")
 
         if not username:
             error = "Username is required."
@@ -175,10 +172,6 @@ def register():
             error = "Password must be at least 6 characters."
         elif password != confirm:
             error = "Passwords do not match."
-        elif role not in ("user", "low"):
-            error = "Invalid role selected."
-        elif not manager_id_str:
-            error = "Please select a manager."
         elif users_collection.find_one({"username": username}):
             error = "That username is already taken."
         else:
@@ -186,12 +179,11 @@ def register():
             users_collection.insert_one({
                 "username": username,
                 "password": hashed,
-                "role": role,
-                "manager_id": ObjectId(manager_id_str)
+                "role": "user"
             })
             return redirect(url_for("login"))
 
-    return render_template("register.html", admins=admins, error=error)
+    return render_template("register.html", error=error)
 
 
 @app.route("/logout")

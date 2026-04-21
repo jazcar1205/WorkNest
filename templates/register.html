@@ -228,20 +228,6 @@
             <label for="confirm_password">Confirm Password</label>
             <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required>
 
-            <label for="role">Role</label>
-            <select id="role" name="role" required>
-                <option value="user">User (regular access)</option>
-                <option value="low">Low (limited access)</option>
-            </select>
-
-            <label for="manager_id">Manager</label>
-            <select id="manager_id" name="manager_id" required>
-                <option value="">— Select a manager —</option>
-                {% for admin in admins %}
-                <option value="{{ admin._id }}">{{ admin.username }}</option>
-                {% endfor %}
-            </select>
-
             <button type="submit" class="btn-submit">Create Account</button>
         </form>
 
