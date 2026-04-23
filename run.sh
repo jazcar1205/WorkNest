@@ -2,7 +2,7 @@
 # Exit on error, undefined vars, and pipe failures
 set -euo pipefail
 
-APP_DIR="$HOME/TacklNest"
+APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_FILE="app.py"
 # Use the full path to the virtual env's python for stability
 PY="$APP_DIR/venv/bin/python3.12"
