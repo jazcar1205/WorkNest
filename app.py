@@ -648,9 +648,7 @@ def admin_panel():
         total_tasks=task_collection.count_documents({}),
         total_requests=req_collection.count_documents({}),
         total_tickets=tick_collection.count_documents({}),
-        current_user_id=session.get("user_id"),
-        demo_views_user=demo_logs.count_documents({"role": "user"}),
-        demo_views_admin=demo_logs.count_documents({"role": "admin"})
+        current_user_id=session.get("user_id")
     )
 
 
