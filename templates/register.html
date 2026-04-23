@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GQJB1KQKF8"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-GQJB1KQKF8');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkNest — Create Account</title>
+    <title>TacklNest — Create Account</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -187,7 +195,7 @@
 <body>
 
 <div class="login-sidebar">
-    <div class="login-logo">WorkNest</div>
+    <div class="login-logo">TacklNest</div>
     <p class="login-tagline">Your unified work management hub for tasks, requests, tickets, and appointments.</p>
 
     <div class="login-feature">
@@ -211,7 +219,7 @@
 <div class="login-main">
     <div class="login-card">
         <h1 class="card-title">Create Account</h1>
-        <p class="card-sub">Join your team on WorkNest</p>
+        <p class="card-sub">Join your team on TacklNest</p>
 
         {% if error %}
         <div class="error-box">{{ error }}</div>

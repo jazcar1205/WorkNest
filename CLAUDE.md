@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WorkNest is a unified work management system for tasks, requests, tickets, and appointments. It is a Flask + MongoDB application with Jinja2 templates and vanilla JS/CSS frontend.
+TacklNest is a unified work management system for tasks, requests, tickets, and appointments. It is a Flask + MongoDB application with Jinja2 templates and vanilla JS/CSS frontend.
 
 ## Running the App
 

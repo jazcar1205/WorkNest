@@ -1,10 +1,10 @@
-# WorkNest
+# TacklNest
 **A Unified Task, Request, Ticket, and Appointments Manager**
 
 ---
 
 ## Overview
-WorkNest is a web-based work management system built with Flask and MongoDB. It centralizes:
+TacklNest is a web-based work management system built with Flask and MongoDB. It centralizes:
 - Tasks
 - Requests
 - Tickets

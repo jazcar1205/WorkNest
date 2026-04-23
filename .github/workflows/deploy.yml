@@ -24,7 +24,7 @@ jobs:
           envs: MONGO_URI,SECRET_KEY
           script: |
             set -e
-            cd ~/WorkNest
+            cd ~/TacklNest
 
             # Write .env from GitHub Secrets (overwrites on every deploy)
             cat > .env <<EOF
