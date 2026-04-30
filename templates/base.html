@@ -519,6 +519,31 @@
             color: #EF8080 !important;
         }
     </style>
+    {% if user_mode == 'school' %}
+    <style>
+        :root {
+            --sidebar-bg:            #0A2015;
+            --sidebar-text:          #7BAE8A;
+            --sidebar-hover:         rgba(255,255,255,0.06);
+            --sidebar-active-bg:     rgba(201,162,39,0.20);
+            --sidebar-active-border: #C9A227;
+            --sidebar-active-text:   #FFF8DC;
+            --brown:      #1B5E20;
+            --brown-dark: #0A3D12;
+            --brown-mid:  #C9A227;
+            --page-bg:    #F2F8F2;
+        }
+        .work-col-header   { background: #F1FAF2 !important; }
+        .work-col-count    { background: #DCFCE7 !important; }
+        .stat-icon-wrap.tasks     { background: #DCFCE7; color: #166534; }
+        .stat-icon-wrap.requests  { background: #FEF9C3; color: #854D0E; }
+        .stat-icon-wrap.tickets   { background: #FEF08A; color: #713F12; }
+        .work-item:hover { background: #F0FFF4 !important; }
+        .tasks-chip  { background: #DCFCE7 !important; }
+        .req-chip    { background: #FEF9C3 !important; }
+        .tick-chip   { background: #FEF08A !important; }
+    </style>
+    {% endif %}
 </head>
 
 <!-- Google tag (gtag.js) -->
@@ -543,7 +568,12 @@
             <div class="user-avatar">{{ current_username[0]|upper if current_username else '?' }}</div>
             <div class="user-info">
                 <div class="user-name">{{ current_username }}</div>
-                <span class="role-badge role-{{ current_role }}">{{ current_role|capitalize }}</span>
+                <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+                    <span class="role-badge role-{{ current_role }}">{{ current_role|capitalize }}</span>
+                    <span class="role-badge" style="background:{% if user_mode=='school' %}rgba(201,162,39,0.25);color:#C9A227{% else %}rgba(255,255,255,0.1);color:#B89878{% endif %}">
+                        {% if user_mode == 'school' %}School{% else %}Work{% endif %}
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -565,7 +595,7 @@
                     <polyline points="9 11 12 14 22 4"/>
                     <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                 </svg>
-                Tasks
+                {{ labels.tasks }}
             </a>
 
             <a href="/openRequests" class="nav-item" data-path="/openRequests">
@@ -573,7 +603,7 @@
                     <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
                     <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
                 </svg>
-                Requests
+                {{ labels.requests }}
             </a>
 
             <a href="/openTickets" class="nav-item" data-path="/openTickets">
@@ -581,7 +611,7 @@
                     <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
                     <line x1="7" y1="7" x2="7.01" y2="7"/>
                 </svg>
-                Tickets
+                {{ labels.tickets }}
             </a>
 
             <a href="/assigned" class="nav-item" data-path="/assigned">
@@ -589,7 +619,7 @@
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                 </svg>
-                My Work
+                {{ labels.my_work }}
             </a>
 
             <a href="/appointments" class="nav-item" data-path="/appointments">
@@ -599,7 +629,7 @@
                     <line x1="8" y1="2" x2="8" y2="6"/>
                     <line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
-                Appointments
+                {{ labels.appointments }}
             </a>
 
             <a href="/feedback" class="nav-item" data-path="/feedback">
@@ -620,6 +650,13 @@
         </div>
 
         <div class="sidebar-footer">
+            {% if not is_demo %}
+            <form method="POST" action="/switch-mode" style="margin-bottom:8px">
+                <button type="submit" style="width:100%;padding:8px 12px;border-radius:7px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:var(--sidebar-text);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;text-align:left;transition:background 0.12s" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                    ⇄ Request switch to {{ 'Work' if user_mode == 'school' else 'School' }} Mode
+                </button>
+            </form>
+            {% endif %}
             <a href="/create" class="sidebar-create-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

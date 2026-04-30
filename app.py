@@ -64,12 +64,47 @@ def demo_readonly(f):
     return decorated
 
 
+def get_labels():
+    mode = session.get("mode", "work")
+    if mode == "school":
+        req_plural = session.get("request_label", "Projects")
+        req_single = {"Projects": "Project", "Labs": "Lab"}.get(req_plural, "Project")
+        return {
+            "mode":             "school",
+            "tasks":            "Homework",
+            "requests":         req_plural,
+            "tickets":          "Exams",
+            "appointments":     "Schedule",
+            "my_work":          "Timeline",
+            "task_singular":    "Homework",
+            "request_singular": req_single,
+            "ticket_singular":  "Exam",
+            "create_title":     "Add New",
+            "create_sub":       f"Add homework, a {req_single.lower()}, or an exam",
+        }
+    return {
+        "mode":             "work",
+        "tasks":            "Tasks",
+        "requests":         "Requests",
+        "tickets":          "Tickets",
+        "appointments":     "Appointments",
+        "my_work":          "My Work",
+        "task_singular":    "Task",
+        "request_singular": "Request",
+        "ticket_singular":  "Ticket",
+        "create_title":     "Create Item",
+        "create_sub":       "Add a new task, request, or ticket",
+    }
+
+
 @app.context_processor
 def inject_user():
     return {
         "current_username": session.get("username", ""),
         "current_role": session.get("role", ""),
-        "is_demo": session.get("is_demo", False)
+        "is_demo": session.get("is_demo", False),
+        "user_mode": session.get("mode", "work"),
+        "labels": get_labels(),
     }
 
 
@@ -149,6 +184,8 @@ def login():
             session["username"] = user["username"]
             session["role"] = user.get("role", "user")
             session["user_id"] = str(user["_id"])
+            session["mode"] = user.get("mode", "work")
+            session["request_label"] = user.get("request_label", "Requests")
             manager_id = user.get("manager_id")
             session["manager_id"] = str(manager_id) if manager_id else None
             return redirect(url_for("dashboard"))
@@ -186,6 +223,8 @@ def set_password():
             session["username"] = user["username"]
             session["role"] = user.get("role", "user")
             session["user_id"] = str(user["_id"])
+            session["mode"] = user.get("mode", "work")
+            session["request_label"] = user.get("request_label", "Requests")
             manager_id = user.get("manager_id")
             session["manager_id"] = str(manager_id) if manager_id else None
             return redirect(url_for("dashboard"))
@@ -204,6 +243,9 @@ def register():
         sec_q     = request.form.get("security_question", "").strip()
         sec_a     = request.form.get("security_answer", "").strip()
 
+        mode          = request.form.get("mode", "work")
+        request_label = request.form.get("request_label", "Projects") if mode == "school" else "Requests"
+
         if not username:
             error = "Username is required."
         elif len(password) < 6:
@@ -214,15 +256,19 @@ def register():
             error = "Please select a security question."
         elif not sec_a:
             error = "Please provide an answer to your security question."
+        elif mode not in ("work", "school"):
+            error = "Invalid mode selected."
         elif users_collection.find_one({"username": username}):
             error = "That username is already taken."
         else:
             users_collection.insert_one({
-                "username": username,
-                "password": generate_password_hash(password),
-                "role": "user",
+                "username":        username,
+                "password":        generate_password_hash(password),
+                "role":            "user",
                 "security_question": sec_q,
                 "security_answer":   generate_password_hash(sec_a.lower()),
+                "mode":            mode,
+                "request_label":   request_label,
             })
             return redirect(url_for("login"))
 
@@ -415,7 +461,8 @@ def open_tasks():
     for t in tasks:
         t["_id"] = str(t["_id"])
 
-    return render_template("items.html", items=tasks, title="Tasks", assignable_users=assignable_users)
+    lbl = get_labels()
+    return render_template("items.html", items=tasks, title=lbl["tasks"], item_type="Task", assignable_users=assignable_users)
 
 
 @app.route("/openTickets")
@@ -433,7 +480,8 @@ def open_tickets():
     for t in tickets:
         t["_id"] = str(t["_id"])
 
-    return render_template("items.html", items=tickets, title="Tickets", assignable_users=assignable_users)
+    lbl = get_labels()
+    return render_template("items.html", items=tickets, title=lbl["tickets"], item_type="Ticket", assignable_users=assignable_users)
 
 
 @app.route("/openRequests")
@@ -451,7 +499,8 @@ def open_requests():
     for r in requests_data:
         r["_id"] = str(r["_id"])
 
-    return render_template("items.html", items=requests_data, title="Requests", assignable_users=assignable_users)
+    lbl = get_labels()
+    return render_template("items.html", items=requests_data, title=lbl["requests"], item_type="Request", assignable_users=assignable_users)
 
 
 @app.route("/create")
@@ -857,6 +906,23 @@ def admin_delete_user():
         return jsonify({"error": "You cannot delete your own account."}), 400
     users_collection.delete_one({"_id": ObjectId(user_id)})
     return jsonify({"success": True})
+
+
+@app.route("/switch-mode", methods=["POST"])
+@login_required
+@demo_readonly
+def switch_mode():
+    username = session.get("username")
+    current_mode = session.get("mode", "work")
+    requested_mode = "school" if current_mode == "work" else "work"
+    feedback_collection.insert_one({
+        "rating": 5,
+        "feedback": f"Mode switch request: {username} wants to switch from {current_mode} to {requested_mode} mode.",
+        "submitted_by": username,
+        "submitted_at": datetime.utcnow().isoformat(),
+        "type": "mode_switch_request"
+    })
+    return redirect(url_for("dashboard"))
 
 
 app.run(host="0.0.0.0", port=5055, debug=True)

@@ -6,7 +6,7 @@
 
     <div class="items-header" style="margin-bottom:16px">
         <div>
-            <h1 class="page-title">My Work</h1>
+            <h1 class="page-title">{{ labels.my_work }}</h1>
             <p class="page-subtitle">All assigned items by category</p>
         </div>
     </div>
@@ -15,12 +15,12 @@
 
         <div class="work-col">
             <div class="work-col-header">
-                <span class="work-col-title">Tickets</span>
+                <span class="work-col-title">{{ labels.tickets }}</span>
                 <span class="work-col-count">{{ tickets|length }}</span>
             </div>
             <div class="work-col-body">
                 {% if tickets|length == 0 %}
-                    <p class="empty" style="padding:20px 0">No tickets</p>
+                    <p class="empty" style="padding:20px 0">No {{ labels.tickets|lower }}</p>
                 {% else %}
                     {% for item in tickets %}
                     <div class="work-item"
@@ -45,12 +45,12 @@
 
         <div class="work-col">
             <div class="work-col-header">
-                <span class="work-col-title">Requests</span>
+                <span class="work-col-title">{{ labels.requests }}</span>
                 <span class="work-col-count">{{ requests|length }}</span>
             </div>
             <div class="work-col-body">
                 {% if requests|length == 0 %}
-                    <p class="empty" style="padding:20px 0">No requests</p>
+                    <p class="empty" style="padding:20px 0">No {{ labels.requests|lower }}</p>
                 {% else %}
                     {% for item in requests %}
                     <div class="work-item"
@@ -75,12 +75,12 @@
 
         <div class="work-col">
             <div class="work-col-header">
-                <span class="work-col-title">Tasks</span>
+                <span class="work-col-title">{{ labels.tasks }}</span>
                 <span class="work-col-count">{{ tasks|length }}</span>
             </div>
             <div class="work-col-body">
                 {% if tasks|length == 0 %}
-                    <p class="empty" style="padding:20px 0">No tasks</p>
+                    <p class="empty" style="padding:20px 0">No {{ labels.tasks|lower }}</p>
                 {% else %}
                     {% for item in tasks %}
                     <div class="work-item"

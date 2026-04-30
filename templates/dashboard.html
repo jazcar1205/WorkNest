@@ -18,7 +18,7 @@
             </svg>
         </div>
         <div class="stat-num">{{ open_tasks }}</div>
-        <div class="stat-label">Open Tasks</div>
+        <div class="stat-label">Open {{ labels.tasks }}</div>
     </div>
 
     <div class="stat-card">
@@ -40,7 +40,7 @@
             </svg>
         </div>
         <div class="stat-num">{{ open_requests }}</div>
-        <div class="stat-label">Open Requests</div>
+        <div class="stat-label">Open {{ labels.requests }}</div>
     </div>
 
     <div class="stat-card">
@@ -51,7 +51,7 @@
             </svg>
         </div>
         <div class="stat-num">{{ open_tickets }}</div>
-        <div class="stat-label">Open Tickets</div>
+        <div class="stat-label">Open {{ labels.tickets }}</div>
     </div>
 
     <div class="stat-card">
@@ -167,15 +167,15 @@
         <div class="cat-row">
             <div class="cat-chip tasks-chip">
                 <span class="cat-num">{{ open_tasks }}</span>
-                <span class="cat-lbl">Tasks</span>
+                <span class="cat-lbl">{{ labels.tasks }}</span>
             </div>
             <div class="cat-chip req-chip">
                 <span class="cat-num">{{ open_requests }}</span>
-                <span class="cat-lbl">Requests</span>
+                <span class="cat-lbl">{{ labels.requests }}</span>
             </div>
             <div class="cat-chip tick-chip">
                 <span class="cat-num">{{ open_tickets }}</span>
-                <span class="cat-lbl">Tickets</span>
+                <span class="cat-lbl">{{ labels.tickets }}</span>
             </div>
         </div>
     </div>
