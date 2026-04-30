@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import calendar as cal_module
 import os
 from dotenv import load_dotenv
@@ -237,6 +238,54 @@ def demo_access(role):
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+def _token_serializer():
+    return URLSafeTimedSerializer(app.secret_key)
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    reset_link = None
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        user = users_collection.find_one({"username": username})
+        if user:
+            token = _token_serializer().dumps(str(user["_id"]), salt="pw-reset")
+            reset_link = url_for("reset_password", token=token, _external=True)
+        else:
+            error = "No account found with that username."
+    return render_template("forgot_password.html", reset_link=reset_link, error=error)
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    try:
+        user_id_str = _token_serializer().loads(token, salt="pw-reset", max_age=3600)
+    except (SignatureExpired, BadSignature):
+        return render_template("forgot_password.html", error="This reset link has expired or is invalid. Please request a new one.")
+
+    user = users_collection.find_one({"_id": ObjectId(user_id_str)})
+    if not user:
+        return redirect(url_for("forgot_password"))
+
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+        if len(password) < 6:
+            error = "Password must be at least 6 characters."
+        elif password != confirm:
+            error = "Passwords do not match."
+        else:
+            users_collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"password": generate_password_hash(password)}}
+            )
+            return redirect(url_for("login"))
+
+    return render_template("reset_password.html", token=token, username=user["username"], error=error)
 
 
 # ── Existing routes (all protected) ──────────────────────────────────────────
