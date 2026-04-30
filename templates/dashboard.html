@@ -159,25 +159,6 @@
         <div class="summary-total">
             {{ total_all }} total item{{ 's' if total_all != 1 else '' }}
         </div>
-
-        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-
-        <p class="section-title" style="margin-bottom:14px">By Category</p>
-
-        <div class="cat-row">
-            <div class="cat-chip tasks-chip">
-                <span class="cat-num">{{ open_tasks }}</span>
-                <span class="cat-lbl">{{ labels.tasks }}</span>
-            </div>
-            <div class="cat-chip req-chip">
-                <span class="cat-num">{{ open_requests }}</span>
-                <span class="cat-lbl">{{ labels.requests }}</span>
-            </div>
-            <div class="cat-chip tick-chip">
-                <span class="cat-num">{{ open_tickets }}</span>
-                <span class="cat-lbl">{{ labels.tickets }}</span>
-            </div>
-        </div>
     </div>
 
 </div>
@@ -341,39 +322,7 @@ new Chart(document.getElementById('statusChart'), {
     margin-top: -8px;
 }
 
-/* Category chips */
-.cat-row {
-    display: flex;
-    gap: 8px;
-}
 
-.cat-chip {
-    flex: 1;
-    border-radius: 8px;
-    padding: 10px 8px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.tasks-chip { background: #EFF6FF; }
-.req-chip   { background: #F5F3FF; }
-.tick-chip  { background: #F0FDFA; }
-
-.cat-num {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-}
-
-.cat-lbl {
-    font-size: 10.5px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
 </style>
 
 {% endblock %}

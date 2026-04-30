@@ -105,7 +105,7 @@
 const GRID_START = 7 * 60;   // 7:00 AM
 const GRID_END   = 23 * 60;  // 11:00 PM
 const GRID_HOURS = (GRID_END - GRID_START) / 60; // 16 hours
-const PX_PER_MIN = 2;        // 2px per minute = 120px per hour
+const PX_PER_MIN = 1;        // 1px per minute = 60px per hour
 
 const COLORS = {
     blue:   { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' },
@@ -300,7 +300,7 @@ renderClasses();
 }
 
 .tt-hour-label {
-    height: 120px;  /* 60 min × 2px/min */
+    height: 60px;  /* 60 min × 1px/min */
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
@@ -317,13 +317,13 @@ renderClasses();
     grid-row: 2;
     position: relative;
     border-left: 1px solid var(--border);
-    height: calc(16 * 120px); /* GRID_HOURS × 120px */
+    height: calc(16 * 60px); /* GRID_HOURS × 60px */
     background: repeating-linear-gradient(
         to bottom,
         transparent 0px,
-        transparent 119px,
-        #F0E8E0 119px,
-        #F0E8E0 120px
+        transparent 59px,
+        #F0E8E0 59px,
+        #F0E8E0 60px
     );
 }
 
@@ -333,9 +333,9 @@ renderClasses();
     background: repeating-linear-gradient(
         to bottom,
         transparent 0px,
-        transparent 119px,
-        #D1FAE5 119px,
-        #D1FAE5 120px
+        transparent 59px,
+        #D1FAE5 59px,
+        #D1FAE5 60px
     );
 }
 {% endif %}
