@@ -27,15 +27,17 @@
             <option value="{{ u }}">{{ u }}</option>
             {% endfor %}
         </select>
+        {% if user_mode != 'school' %}
         <select id="priorityFilter" class="filter-select" onchange="onFilter()">
             <option value="">All Priorities</option>
             <option value="High">High</option>
             <option value="Medium">Medium</option>
             <option value="Low">Low</option>
         </select>
+        {% endif %}
         <select id="statusFilter" class="filter-select" onchange="onFilter()">
             <option value="">All Statuses</option>
-            <option value="Open">Open</option>
+            <option value="Open">{{ labels.status_open }}</option>
             <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
         </select>
@@ -61,8 +63,10 @@
              onclick="openModal(this)">
 
             <div class="card-top">
-                <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+                <span class="status {{ item.status|lower|replace(' ','-') }}">{% if item.status == 'Open' %}{{ labels.status_open }}{% else %}{{ item.status }}{% endif %}</span>
+                {% if user_mode != 'school' %}
                 <span class="priority-badge priority-{{ (item.priority or 'Medium')|lower }}">{{ item.priority or 'Medium' }}</span>
+                {% endif %}
             </div>
 
             <div class="card-desc">{{ item.description }}</div>

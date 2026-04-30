@@ -34,7 +34,7 @@
                          onclick="openWorkModal(this)">
                         <div class="work-item-desc">{{ item.description }}</div>
                         <div class="work-item-footer">
-                            <span class="status {{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>
+                            <span class="status {{ item.status|lower|replace(' ','-') }}">{% if item.status == 'Open' %}{{ labels.status_open }}{% else %}{{ item.status }}{% endif %}</span>
                             {% if item.assigned %}<span class="work-person">{{ item.assigned }}</span>{% endif %}
                         </div>
                     </div>

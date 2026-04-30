@@ -251,20 +251,6 @@
                 </label>
             </div>
 
-            <div id="school-options" style="display:none;margin-bottom:18px">
-                <label style="margin-bottom:8px">What do you call your group work?</label>
-                <div style="display:flex;gap:10px">
-                    <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid #E4D8CC;border-radius:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:#1C0A02">
-                        <input type="radio" name="request_label" value="Projects" checked style="accent-color:#1B5E20;width:14px;height:14px">
-                        Projects
-                    </label>
-                    <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid #E4D8CC;border-radius:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:#1C0A02">
-                        <input type="radio" name="request_label" value="Labs" style="accent-color:#1B5E20;width:14px;height:14px">
-                        Labs
-                    </label>
-                </div>
-            </div>
-
             <label for="security_question">Security Question</label>
             <select id="security_question" name="security_question" required style="appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path fill=%22%238A7060%22 d=%22M1 1l5 5 5-5%22 stroke=%22%238A7060%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/></svg>');background-repeat:no-repeat;background-position:right 13px center;padding-right:36px;cursor:pointer">
                 <option value="" disabled selected>Choose a question…</option>
@@ -287,7 +273,6 @@
 <script>
 function toggleMode() {
     const isSchool = document.querySelector('input[name="mode"]:checked').value === 'school';
-    document.getElementById('school-options').style.display = isSchool ? 'block' : 'none';
     document.getElementById('label-work').style.borderColor   = isSchool ? '#E4D8CC' : '#80461B';
     document.getElementById('label-school').style.borderColor = isSchool ? '#1B5E20' : '#E4D8CC';
 }

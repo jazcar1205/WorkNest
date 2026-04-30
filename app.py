@@ -29,6 +29,13 @@ tick_collection = db["tickets"]
 users_collection = db["users"]
 feedback_collection = db["feedback"]
 demo_logs = db["demo_logs"]
+# ── School-mode collections ───────────────────────────────────────────────────
+homework_collection    = db["homework"]
+assignments_collection = db["assignments"]
+exams_collection       = db["exams"]
+events_collection      = db["events"]
+classes_collection     = db["classes"]
+mode_requests_collection = db["modeRequests"]
 
 
 # ── Auth helpers ──────────────────────────────────────────────────────────────
@@ -65,22 +72,20 @@ def demo_readonly(f):
 
 
 def get_labels():
-    mode = session.get("mode", "work")
-    if mode == "school":
-        req_plural = session.get("request_label", "Projects")
-        req_single = {"Projects": "Project", "Labs": "Lab"}.get(req_plural, "Project")
+    if session.get("mode") == "school":
         return {
             "mode":             "school",
             "tasks":            "Homework",
-            "requests":         req_plural,
+            "requests":         "Assignments",
             "tickets":          "Exams",
             "appointments":     "Schedule",
             "my_work":          "Timeline",
             "task_singular":    "Homework",
-            "request_singular": req_single,
+            "request_singular": "Assignment",
             "ticket_singular":  "Exam",
             "create_title":     "Add New",
-            "create_sub":       f"Add homework, a {req_single.lower()}, or an exam",
+            "create_sub":       "Add homework, an assignment, or an exam",
+            "status_open":      "Not Started",
         }
     return {
         "mode":             "work",
@@ -94,7 +99,20 @@ def get_labels():
         "ticket_singular":  "Ticket",
         "create_title":     "Create Item",
         "create_sub":       "Add a new task, request, or ticket",
+        "status_open":      "Open",
     }
+
+
+def get_item_collections():
+    if session.get("mode") == "school":
+        return homework_collection, assignments_collection, exams_collection
+    return task_collection, req_collection, tick_collection
+
+
+def get_appt_collection():
+    if session.get("mode") == "school":
+        return events_collection
+    return ap_collection
 
 
 @app.context_processor
@@ -123,6 +141,9 @@ def get_assignable_usernames():
     role = session.get("role")
     username = session.get("username")
     user_id_str = session.get("user_id")
+
+    if session.get("mode") == "school":
+        return [username] if username else []
 
     if not role or not username:
         return [username] if username else []
@@ -185,7 +206,6 @@ def login():
             session["role"] = user.get("role", "user")
             session["user_id"] = str(user["_id"])
             session["mode"] = user.get("mode", "work")
-            session["request_label"] = user.get("request_label", "Requests")
             manager_id = user.get("manager_id")
             session["manager_id"] = str(manager_id) if manager_id else None
             return redirect(url_for("dashboard"))
@@ -224,7 +244,6 @@ def set_password():
             session["role"] = user.get("role", "user")
             session["user_id"] = str(user["_id"])
             session["mode"] = user.get("mode", "work")
-            session["request_label"] = user.get("request_label", "Requests")
             manager_id = user.get("manager_id")
             session["manager_id"] = str(manager_id) if manager_id else None
             return redirect(url_for("dashboard"))
@@ -243,8 +262,7 @@ def register():
         sec_q     = request.form.get("security_question", "").strip()
         sec_a     = request.form.get("security_answer", "").strip()
 
-        mode          = request.form.get("mode", "work")
-        request_label = request.form.get("request_label", "Projects") if mode == "school" else "Requests"
+        mode = request.form.get("mode", "work")
 
         if not username:
             error = "Username is required."
@@ -262,13 +280,12 @@ def register():
             error = "That username is already taken."
         else:
             users_collection.insert_one({
-                "username":        username,
-                "password":        generate_password_hash(password),
-                "role":            "user",
+                "username":          username,
+                "password":          generate_password_hash(password),
+                "role":              "user",
                 "security_question": sec_q,
                 "security_answer":   generate_password_hash(sec_a.lower()),
-                "mode":            mode,
-                "request_label":   request_label,
+                "mode":              mode,
             })
             return redirect(url_for("login"))
 
@@ -453,10 +470,11 @@ def open_tasks():
     username = session.get("username")
     assignable_users = get_assignable_usernames()
 
-    if role == "low":
-        tasks = list(task_collection.find({"assigned": username}))
+    task_coll, _, _ = get_item_collections()
+    if role == "low" or session.get("mode") == "school":
+        tasks = list(task_coll.find({"assigned": username}))
     else:
-        tasks = list(task_collection.find())
+        tasks = list(task_coll.find())
 
     for t in tasks:
         t["_id"] = str(t["_id"])
@@ -472,10 +490,11 @@ def open_tickets():
     username = session.get("username")
     assignable_users = get_assignable_usernames()
 
-    if role == "low":
-        tickets = list(tick_collection.find({"assigned": username}))
+    _, _, tick_coll = get_item_collections()
+    if role == "low" or session.get("mode") == "school":
+        tickets = list(tick_coll.find({"assigned": username}))
     else:
-        tickets = list(tick_collection.find())
+        tickets = list(tick_coll.find())
 
     for t in tickets:
         t["_id"] = str(t["_id"])
@@ -491,10 +510,11 @@ def open_requests():
     username = session.get("username")
     assignable_users = get_assignable_usernames()
 
-    if role == "low":
-        requests_data = list(req_collection.find({"assigned": username}))
+    _, req_coll, _ = get_item_collections()
+    if role == "low" or session.get("mode") == "school":
+        requests_data = list(req_coll.find({"assigned": username}))
     else:
-        requests_data = list(req_collection.find())
+        requests_data = list(req_coll.find())
 
     for r in requests_data:
         r["_id"] = str(r["_id"])
@@ -530,16 +550,15 @@ def create_item():
         "created_by": session.get("username")
     }
 
+    task_coll, req_coll, tick_coll = get_item_collections()
     if item_type == "Task":
-        task_collection.insert_one(item_data)
+        task_coll.insert_one(item_data)
         return redirect(url_for("open_tasks"))
-
     elif item_type == "Request":
-        req_collection.insert_one(item_data)
+        req_coll.insert_one(item_data)
         return redirect(url_for("open_requests"))
-
     elif item_type == "Ticket":
-        tick_collection.insert_one(item_data)
+        tick_coll.insert_one(item_data)
         return redirect(url_for("open_tickets"))
 
     return redirect(url_for("creation"))
@@ -600,8 +619,10 @@ def appointments():
     has_prev = prev_date >= min_date
     has_next = next_date <= max_date
 
+    appt_coll = get_appt_collection()
+
     # Upcoming: always from today forward, filtered by user
-    upcoming_all = list(ap_collection.find({"date": {"$gte": today_str}}).sort("date", 1))
+    upcoming_all = list(appt_coll.find({"date": {"$gte": today_str}}).sort("date", 1))
     upcoming = [
         a for a in upcoming_all
         if "created_by" not in a
@@ -612,7 +633,7 @@ def appointments():
         a["_id"] = str(a["_id"])
 
     # Calendar appointments for the viewed month
-    month_appts_all = list(ap_collection.find({"date": {"$regex": f"^{month_str}"}}))
+    month_appts_all = list(appt_coll.find({"date": {"$regex": f"^{month_str}"}}))
     month_appts = [
         a for a in month_appts_all
         if "created_by" not in a
@@ -668,7 +689,7 @@ def create_appointment():
         "description": request.form.get("description"),
         "created_by":  session.get("username")
     }
-    ap_collection.insert_one(data)
+    get_appt_collection().insert_one(data)
     return redirect(url_for("appointments"))
 
 
@@ -680,7 +701,7 @@ def update_appointment():
     appt_id = data.get("id")
     if not appt_id:
         return jsonify({"error": "Missing ID"}), 400
-    ap_collection.update_one(
+    get_appt_collection().update_one(
         {"_id": ObjectId(appt_id)},
         {"$set": {
             "title":       data.get("title"),
@@ -699,7 +720,7 @@ def update_appointment():
 @demo_readonly
 def delete_appointment():
     data = request.get_json()
-    ap_collection.delete_one({"_id": ObjectId(data.get("id"))})
+    get_appt_collection().delete_one({"_id": ObjectId(data.get("id"))})
     return jsonify({"success": True})
 
 
@@ -710,7 +731,8 @@ def delete_item():
     data = request.json
     item_id = data.get("id")
 
-    for collection in [task_collection, tick_collection, req_collection]:
+    task_coll, req_coll, tick_coll = get_item_collections()
+    for collection in [task_coll, req_coll, tick_coll]:
         result = collection.delete_one({"_id": ObjectId(item_id)})
         if result.deleted_count > 0:
             break
@@ -737,7 +759,8 @@ def update_item():
         "due":         data.get("due")
     }
 
-    for collection in [task_collection, tick_collection, req_collection]:
+    task_coll, req_coll, tick_coll = get_item_collections()
+    for collection in [task_coll, req_coll, tick_coll]:
         result = collection.update_one(
             {"_id": ObjectId(item_id)},
             {"$set": updated_data}
@@ -754,9 +777,10 @@ def assigned_tasks():
     username = session.get("username")
     assignable_users = get_assignable_usernames()
 
-    tasks = list(task_collection.find({"assigned": username}))
-    tickets = list(tick_collection.find({"assigned": username}))
-    requests_data = list(req_collection.find({"assigned": username}))
+    task_coll, req_coll, tick_coll = get_item_collections()
+    tasks = list(task_coll.find({"assigned": username}))
+    tickets = list(tick_coll.find({"assigned": username}))
+    requests_data = list(req_coll.find({"assigned": username}))
 
     for item in tasks + tickets + requests_data:
         item["_id"] = str(item["_id"])
@@ -773,27 +797,38 @@ def assigned_tasks():
 @app.route("/Dashboard")
 @login_required
 def dashboard():
-    open_tasks = task_collection.count_documents({"status": "Open"})
-    open_requests = req_collection.count_documents({"status": "Open"})
-    open_tickets = tick_collection.count_documents({"status": "Open"})
+    username = session.get("username")
+    is_school = session.get("mode") == "school"
+    task_coll, req_coll, tick_coll = get_item_collections()
+    lbl = get_labels()
+
+    user_filter = {"assigned": username} if is_school else {}
+
+    open_tasks    = task_coll.count_documents({**user_filter, "status": "Open"})
+    open_requests = req_coll.count_documents({**user_filter, "status": "Open"})
+    open_tickets  = tick_coll.count_documents({**user_filter, "status": "Open"})
 
     in_progress = (
-        task_collection.count_documents({"status": "In Progress"}) +
-        req_collection.count_documents({"status": "In Progress"}) +
-        tick_collection.count_documents({"status": "In Progress"})
+        task_coll.count_documents({**user_filter, "status": "In Progress"}) +
+        req_coll.count_documents({**user_filter, "status": "In Progress"}) +
+        tick_coll.count_documents({**user_filter, "status": "In Progress"})
     )
 
     completed = (
-        task_collection.count_documents({"status": "Completed"}) +
-        req_collection.count_documents({"status": "Completed"}) +
-        tick_collection.count_documents({"status": "Completed"})
+        task_coll.count_documents({**user_filter, "status": "Completed"}) +
+        req_coll.count_documents({**user_filter, "status": "Completed"}) +
+        tick_coll.count_documents({**user_filter, "status": "Completed"})
     )
 
     total_all = open_tasks + open_requests + open_tickets + in_progress + completed
 
     recent_items = []
-    for coll, type_label in [(task_collection, "Task"), (req_collection, "Request"), (tick_collection, "Ticket")]:
-        for item in coll.find().sort("_id", -1).limit(3):
+    for coll, type_label in [
+        (task_coll, lbl["task_singular"]),
+        (req_coll,  lbl["request_singular"]),
+        (tick_coll, lbl["ticket_singular"]),
+    ]:
+        for item in coll.find(user_filter.copy()).sort("_id", -1).limit(3):
             item["_id"] = str(item["_id"])
             item["type_label"] = type_label
             recent_items.append(item)
@@ -908,6 +943,68 @@ def admin_delete_user():
     return jsonify({"success": True})
 
 
+@app.route("/classes")
+@login_required
+def classes():
+    if session.get("mode") != "school":
+        return redirect(url_for("dashboard"))
+    username = session.get("username")
+    user_classes = list(classes_collection.find({"username": username}))
+    for c in user_classes:
+        c["_id"] = str(c["_id"])
+    return render_template("classes.html", classes=user_classes)
+
+
+@app.route("/create_class", methods=["POST"])
+@login_required
+@demo_readonly
+def create_class():
+    if session.get("mode") != "school":
+        return jsonify({"error": "Not in school mode"}), 403
+    data = request.get_json()
+    classes_collection.insert_one({
+        "username":   session.get("username"),
+        "course":     data.get("course", "").strip(),
+        "day":        int(data.get("day", 0)),
+        "start_time": data.get("start_time", ""),
+        "end_time":   data.get("end_time", ""),
+        "location":   data.get("location", "").strip(),
+        "color":      data.get("color", "blue"),
+    })
+    return jsonify({"success": True})
+
+
+@app.route("/update_class", methods=["POST"])
+@login_required
+@demo_readonly
+def update_class():
+    data = request.get_json()
+    classes_collection.update_one(
+        {"_id": ObjectId(data.get("id")), "username": session.get("username")},
+        {"$set": {
+            "course":     data.get("course", "").strip(),
+            "day":        int(data.get("day", 0)),
+            "start_time": data.get("start_time", ""),
+            "end_time":   data.get("end_time", ""),
+            "location":   data.get("location", "").strip(),
+            "color":      data.get("color", "blue"),
+        }}
+    )
+    return jsonify({"success": True})
+
+
+@app.route("/delete_class", methods=["POST"])
+@login_required
+@demo_readonly
+def delete_class():
+    data = request.get_json()
+    classes_collection.delete_one({
+        "_id": ObjectId(data.get("id")),
+        "username": session.get("username")
+    })
+    return jsonify({"success": True})
+
+
 @app.route("/switch-mode", methods=["POST"])
 @login_required
 @demo_readonly
@@ -915,12 +1012,11 @@ def switch_mode():
     username = session.get("username")
     current_mode = session.get("mode", "work")
     requested_mode = "school" if current_mode == "work" else "work"
-    feedback_collection.insert_one({
-        "rating": 5,
-        "feedback": f"Mode switch request: {username} wants to switch from {current_mode} to {requested_mode} mode.",
+    mode_requests_collection.insert_one({
         "submitted_by": username,
         "submitted_at": datetime.utcnow().isoformat(),
-        "type": "mode_switch_request"
+        "from_mode":    current_mode,
+        "to_mode":      requested_mode,
     })
     return redirect(url_for("dashboard"))
 

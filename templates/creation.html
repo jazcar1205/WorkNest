@@ -38,24 +38,30 @@
                     </div>
                 </div>
 
+                {% if user_mode != 'school' %}
                 <label>Priority</label>
                 <select name="priority" id="prioritySelect" onchange="updatePreview()">
                     <option value="Low">Low</option>
                     <option value="Medium" selected>Medium</option>
                     <option value="High">High</option>
                 </select>
+                {% else %}
+                <input type="hidden" name="priority" value="Medium">
+                {% endif %}
 
                 <label>Status</label>
                 <select name="status" id="statusSelect" onchange="updatePreview()">
-                    <option value="Open">Open</option>
+                    <option value="Open">{{ labels.status_open }}</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Completed">Completed</option>
                 </select>
 
                 <div class="preview-row">
                     <span style="font-size:12px;color:var(--text-muted)">Preview</span>
+                    {% if user_mode != 'school' %}
                     <span id="priorityPreview" class="priority-badge priority-medium">Medium</span>
-                    <span id="statusPreview" class="status open">Open</span>
+                    {% endif %}
+                    <span id="statusPreview" class="status open">{{ labels.status_open }}</span>
                 </div>
             </div>
 
@@ -74,16 +80,19 @@
 </div>
 
 <script>
+const STATUS_OPEN_LABEL = "{{ labels.status_open }}";
 function updatePreview() {
     const sSelect = document.getElementById("statusSelect");
     const sPreview = document.getElementById("statusPreview");
     sPreview.className = "status " + sSelect.value.toLowerCase().replace(" ", "-");
-    sPreview.textContent = sSelect.value;
+    sPreview.textContent = sSelect.value === "Open" ? STATUS_OPEN_LABEL : sSelect.value;
 
     const pSelect = document.getElementById("prioritySelect");
     const pPreview = document.getElementById("priorityPreview");
-    pPreview.className = "priority-badge priority-" + pSelect.value.toLowerCase();
-    pPreview.textContent = pSelect.value;
+    if (pSelect && pPreview) {
+        pPreview.className = "priority-badge priority-" + pSelect.value.toLowerCase();
+        pPreview.textContent = pSelect.value;
+    }
 }
 </script>
 

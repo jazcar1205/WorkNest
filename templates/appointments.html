@@ -4,7 +4,7 @@
 
 <div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px">
     <div>
-        <h1 class="page-title">Appointments</h1>
+        <h1 class="page-title">{{ labels.appointments }}</h1>
         <p class="page-subtitle">{{ month_name }}</p>
     </div>
     <button class="btn btn-primary" onclick="openPanel()">+ New Appointment</button>
@@ -141,6 +141,7 @@
                 </div>
             </div>
 
+            {% if user_mode != 'school' %}
             <label>Invite <span class="req-star">*</span></label>
             <select name="invite" required>
                 <option value="" disabled selected>Select a person</option>
@@ -148,6 +149,7 @@
                 <option value="{{ u }}">{{ u }}</option>
                 {% endfor %}
             </select>
+            {% endif %}
 
             <label>Description</label>
             <textarea name="description" placeholder="What's this meeting about?" style="height:100px"></textarea>
@@ -188,6 +190,7 @@
             </div>
         </div>
 
+        {% if user_mode != 'school' %}
         <label>Invite <span class="req-star">*</span></label>
         <select id="appt-invite" disabled>
             <option value="" disabled>Select a person</option>
@@ -195,6 +198,7 @@
             <option value="{{ u }}">{{ u }}</option>
             {% endfor %}
         </select>
+        {% endif %}
 
         <label>Description</label>
         <textarea id="appt-description" style="height:80px" disabled></textarea>

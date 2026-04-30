@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px">
+    <div>
+        <h1 class="page-title">My Classes</h1>
+        <p class="page-subtitle">Weekly schedule — Sunday to Saturday</p>
+    </div>
+    <button class="btn btn-primary" onclick="openClassModal()">+ Add Class</button>
+</div>
+
+<!-- TIMETABLE -->
+<div class="timetable-wrap section-card" style="padding:0;overflow:hidden">
+    <div class="timetable">
+
+        <!-- Header row -->
+        <div class="tt-corner"></div>
+        <div class="tt-day-header">Sun</div>
+        <div class="tt-day-header">Mon</div>
+        <div class="tt-day-header">Tue</div>
+        <div class="tt-day-header">Wed</div>
+        <div class="tt-day-header">Thu</div>
+        <div class="tt-day-header">Fri</div>
+        <div class="tt-day-header">Sat</div>
+
+        <!-- Time labels + day columns -->
+        <div class="tt-times">
+            {% for h in range(7, 23) %}
+            <div class="tt-hour-label">
+                {{ "%d %s"|format(h if h <= 12 else h-12, "AM" if h < 12 else "PM") }}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% for d in range(7) %}
+        <div class="tt-col" id="col-{{ d }}" data-day="{{ d }}"></div>
+        {% endfor %}
+
+    </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div id="classModal" class="modal">
+    <div class="modal-content" style="max-width:460px">
+        <div class="modal-header">
+            <h3 id="classModalTitle">Add Class</h3>
+            <button class="modal-close" onclick="closeClassModal()">&times;</button>
+        </div>
+
+        <input type="hidden" id="class-id">
+
+        <label>Course Name <span class="req-star">*</span></label>
+        <input type="text" id="class-course" placeholder="e.g. Biology 101" style="width:100%;padding:10px 13px;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+
+        <label>Day <span class="req-star">*</span></label>
+        <select id="class-day" style="width:100%;padding:10px 13px;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;outline:none;background:#fff">
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+        </select>
+
+        <div style="display:flex;gap:12px;margin-bottom:16px">
+            <div style="flex:1">
+                <label>Start Time <span class="req-star">*</span></label>
+                <input type="time" id="class-start" style="width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+            </div>
+            <div style="flex:1">
+                <label>End Time <span class="req-star">*</span></label>
+                <input type="time" id="class-end" style="width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+            </div>
+        </div>
+
+        <label>Location <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="class-location" placeholder="e.g. Room 204" style="width:100%;padding:10px 13px;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+
+        <label>Color</label>
+        <div class="color-picker" id="colorPicker">
+            <div class="color-swatch" data-color="blue"   style="background:#3B82F6" title="Blue"></div>
+            <div class="color-swatch" data-color="green"  style="background:#10B981" title="Green"></div>
+            <div class="color-swatch" data-color="purple" style="background:#8B5CF6" title="Purple"></div>
+            <div class="color-swatch" data-color="orange" style="background:#F59E0B" title="Orange"></div>
+            <div class="color-swatch" data-color="red"    style="background:#EF4444" title="Red"></div>
+            <div class="color-swatch" data-color="pink"   style="background:#EC4899" title="Pink"></div>
+            <div class="color-swatch" data-color="teal"   style="background:#14B8A6" title="Teal"></div>
+            <div class="color-swatch" data-color="gold"   style="background:#EAB308" title="Gold"></div>
+        </div>
+        <input type="hidden" id="class-color" value="blue">
+
+        <div id="class-modal-error" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:8px"></div>
+
+        <div class="modal-actions" style="margin-top:20px">
+            <button class="btn btn-secondary" id="classDeleteBtn" onclick="deleteClass()" style="display:none">Delete</button>
+            <button class="btn btn-secondary" onclick="closeClassModal()">Cancel</button>
+            <button class="btn btn-primary"   onclick="saveClass()">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const GRID_START = 7 * 60;   // 7:00 AM
+const GRID_END   = 23 * 60;  // 11:00 PM
+const GRID_HOURS = (GRID_END - GRID_START) / 60; // 16 hours
+const PX_PER_MIN = 2;        // 2px per minute = 120px per hour
+
+const COLORS = {
+    blue:   { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' },
+    green:  { bg: '#D1FAE5', border: '#10B981', text: '#065F46' },
+    purple: { bg: '#EDE9FE', border: '#8B5CF6', text: '#5B21B6' },
+    orange: { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' },
+    red:    { bg: '#FEE2E2', border: '#EF4444', text: '#991B1B' },
+    pink:   { bg: '#FCE7F3', border: '#EC4899', text: '#9D174D' },
+    teal:   { bg: '#CCFBF1', border: '#14B8A6', text: '#0F766E' },
+    gold:   { bg: '#FEF9C3', border: '#EAB308', text: '#713F12' },
+};
+
+function timeToMins(t) {
+    if (!t) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function fmt12(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':').map(Number);
+    const ap = h >= 12 ? 'PM' : 'AM';
+    return (h % 12 || 12) + ':' + String(m).padStart(2,'0') + ' ' + ap;
+}
+
+// ── Render all classes ──────────────────────────────────────
+const RAW_CLASSES = {{ classes | tojson }};
+
+function renderClasses() {
+    // Clear existing blocks
+    document.querySelectorAll('.class-block').forEach(el => el.remove());
+
+    RAW_CLASSES.forEach(function(c) {
+        const col = document.getElementById('col-' + c.day);
+        if (!col) return;
+
+        const startMins = timeToMins(c.start_time);
+        const endMins   = timeToMins(c.end_time);
+        if (startMins < GRID_START || endMins <= startMins) return;
+
+        const top    = (startMins - GRID_START) * PX_PER_MIN;
+        const height = Math.max((endMins - startMins) * PX_PER_MIN, 24);
+        const clr    = COLORS[c.color] || COLORS.blue;
+
+        const block = document.createElement('div');
+        block.className = 'class-block';
+        block.style.cssText = `top:${top}px;height:${height}px;background:${clr.bg};border-left:3px solid ${clr.border};color:${clr.text}`;
+        block.innerHTML = `<div class="cb-name">${c.course}</div>` +
+            (height > 36 ? `<div class="cb-time">${fmt12(c.start_time)}${c.end_time ? ' – '+fmt12(c.end_time) : ''}</div>` : '') +
+            (height > 56 && c.location ? `<div class="cb-loc">📍 ${c.location}</div>` : '');
+        block.onclick = function() { openClassModal(c); };
+        col.appendChild(block);
+    });
+}
+
+// ── Modal ────────────────────────────────────────────────────
+let selectedColor = 'blue';
+
+function openClassModal(c) {
+    document.getElementById('classModalTitle').textContent = c ? 'Edit Class' : 'Add Class';
+    document.getElementById('class-id').value       = c ? c._id  : '';
+    document.getElementById('class-course').value   = c ? c.course : '';
+    document.getElementById('class-day').value      = c ? c.day   : '1';
+    document.getElementById('class-start').value    = c ? c.start_time : '';
+    document.getElementById('class-end').value      = c ? c.end_time   : '';
+    document.getElementById('class-location').value = c ? (c.location||'') : '';
+    setColor(c ? (c.color||'blue') : 'blue');
+    document.getElementById('classDeleteBtn').style.display = c ? 'inline-flex' : 'none';
+    document.getElementById('class-modal-error').style.display = 'none';
+    document.getElementById('classModal').style.display = 'block';
+}
+
+function closeClassModal() {
+    document.getElementById('classModal').style.display = 'none';
+}
+
+function setColor(name) {
+    selectedColor = name;
+    document.getElementById('class-color').value = name;
+    document.querySelectorAll('.color-swatch').forEach(function(sw) {
+        sw.classList.toggle('selected', sw.dataset.color === name);
+    });
+}
+
+document.querySelectorAll('.color-swatch').forEach(function(sw) {
+    sw.addEventListener('click', function() { setColor(sw.dataset.color); });
+});
+
+function saveClass() {
+    const id     = document.getElementById('class-id').value;
+    const course = document.getElementById('class-course').value.trim();
+    const start  = document.getElementById('class-start').value;
+    const end    = document.getElementById('class-end').value;
+
+    if (!course || !start || !end) {
+        showErr('Course name, start time, and end time are required.');
+        return;
+    }
+    if (timeToMins(end) <= timeToMins(start)) {
+        showErr('End time must be after start time.');
+        return;
+    }
+
+    const payload = {
+        id:         id || undefined,
+        course:     course,
+        day:        parseInt(document.getElementById('class-day').value),
+        start_time: start,
+        end_time:   end,
+        location:   document.getElementById('class-location').value.trim(),
+        color:      selectedColor,
+    };
+
+    const url = id ? '/update_class' : '/create_class';
+    fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .then(r => {
+            if (r.success) {
+                if (id) {
+                    const idx = RAW_CLASSES.findIndex(c => c._id === id);
+                    if (idx >= 0) RAW_CLASSES[idx] = Object.assign(RAW_CLASSES[idx], payload);
+                } else {
+                    location.reload();
+                    return;
+                }
+                renderClasses();
+                closeClassModal();
+            } else {
+                showErr('Save failed. Please try again.');
+            }
+        });
+}
+
+function deleteClass() {
+    const id = document.getElementById('class-id').value;
+    if (!id || !confirm('Delete this class?')) return;
+    fetch('/delete_class', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id}) })
+        .then(r => r.json())
+        .then(() => location.reload());
+}
+
+function showErr(msg) {
+    const el = document.getElementById('class-modal-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+window.onclick = function(e) {
+    if (e.target === document.getElementById('classModal')) closeClassModal();
+};
+
+// ── Init ─────────────────────────────────────────────────────
+renderClasses();
+</script>
+
+<style>
+/* Timetable layout */
+.timetable-wrap { overflow-x: auto; }
+
+.timetable {
+    display: grid;
+    grid-template-columns: 52px repeat(7, 1fr);
+    grid-template-rows: 40px auto;
+    min-width: 700px;
+}
+
+.tt-corner { grid-row:1;grid-column:1; border-bottom:1px solid var(--border); background:#FDFAF7; }
+
+.tt-day-header {
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    background: #FDFAF7;
+    padding: 0 4px;
+}
+
+/* Time labels column */
+.tt-times {
+    grid-row: 2;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+}
+
+.tt-hour-label {
+    height: 120px;  /* 60 min × 2px/min */
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 4px 8px 0 0;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid #F0E8E0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+/* Day columns */
+.tt-col {
+    grid-row: 2;
+    position: relative;
+    border-left: 1px solid var(--border);
+    height: calc(16 * 120px); /* GRID_HOURS × 120px */
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 119px,
+        #F0E8E0 119px,
+        #F0E8E0 120px
+    );
+}
+
+/* School green grid lines */
+{% if user_mode == 'school' %}
+.tt-col {
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 119px,
+        #D1FAE5 119px,
+        #D1FAE5 120px
+    );
+}
+{% endif %}
+
+/* Class blocks */
+.class-block {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    border-radius: 6px;
+    padding: 5px 7px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: opacity 0.12s, box-shadow 0.12s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    z-index: 1;
+}
+.class-block:hover { opacity: 0.88; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+.cb-name { font-size: 11.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-time { font-size: 10px; margin-top: 2px; opacity: 0.8; }
+.cb-loc  { font-size: 10px; margin-top: 2px; opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Color picker */
+.color-picker {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.color-swatch {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s, border-color 0.1s;
+}
+.color-swatch:hover    { transform: scale(1.15); }
+.color-swatch.selected { border-color: #1C0A02; transform: scale(1.15); }
+
+.req-star { color: #DC2626; }
+label { display:block; font-size:11.5px; font-weight:600; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.05em; }
+</style>
+
+{% endblock %}
