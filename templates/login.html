@@ -19,49 +19,131 @@
 
         /* ── LEFT PANEL ──────────────────────────────── */
         .login-sidebar {
-            width: 420px;
+            width: 440px;
             background: #150700;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 60px 52px;
+            padding: 52px 48px;
             flex-shrink: 0;
+            overflow-y: auto;
         }
 
         .login-logo {
             font-family: 'Pacifico', cursive;
             color: #FFFFFF;
-            font-size: 32px;
-            margin-bottom: 16px;
+            font-size: 30px;
+            margin-bottom: 6px;
         }
 
         .login-tagline {
-            color: #8A6040;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 48px;
-        }
-
-        .login-feature {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .feature-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #C87941;
-            margin-top: 5px;
-            flex-shrink: 0;
-        }
-
-        .feature-text {
+            color: #6A4828;
             font-size: 13px;
-            color: #B89878;
             line-height: 1.5;
+            margin-bottom: 28px;
+        }
+
+        .mode-heading {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #5A3A1A;
+            margin-bottom: 12px;
+        }
+
+        /* Mode cards */
+        .mode-card {
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border: 1px solid transparent;
+        }
+
+        .mode-card-work {
+            background: rgba(200,121,65,0.10);
+            border-color: rgba(200,121,65,0.28);
+        }
+
+        .mode-card-school {
+            background: rgba(27,94,32,0.22);
+            border-color: rgba(201,162,39,0.35);
+        }
+
+        .mode-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .mode-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .mode-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .mode-card-work  .mode-title { color: #E8A870; }
+        .mode-card-school .mode-title { color: #C9A227; }
+
+        .mode-badge {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .mode-card-work  .mode-badge { background: rgba(200,121,65,0.2); color: #C87941; }
+        .mode-card-school .mode-badge { background: rgba(201,162,39,0.2); color: #C9A227; }
+
+        .mode-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .mode-pill {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .mode-card-work  .mode-pill { background: rgba(200,121,65,0.15); color: #D4935A; }
+        .mode-card-school .mode-pill { background: rgba(27,94,32,0.30);   color: #6FCF7A; }
+
+        .mode-desc {
+            font-size: 11.5px;
+            color: #6A5040;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .mode-card-school .mode-desc { color: #4A7A54; }
+
+        .free-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #4A7A54;
+            font-weight: 600;
+        }
+
+        .free-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #6EE7B7;
+            flex-shrink: 0;
         }
 
         /* ── RIGHT PANEL ─────────────────────────────── */
@@ -232,27 +314,47 @@
 
 <div class="login-sidebar">
     <div class="login-logo">TaklNest</div>
-    <p class="login-tagline">Your unified work management hub for tasks, requests, tickets, and appointments.</p>
+    <p class="login-tagline">One app, two modes — built for how you actually work.</p>
 
-    <div class="login-feature">
-        <div class="feature-dot" style="background:#6EE7B7"></div>
-        <div class="feature-text" style="color:#6EE7B7;font-weight:600">Free forever — no credit card needed</div>
+    <p class="mode-heading">Choose your mode when you register</p>
+
+    <!-- Work Mode Card -->
+    <div class="mode-card mode-card-work">
+        <div class="mode-card-header">
+            <span class="mode-icon">💼</span>
+            <span class="mode-title">Work Mode</span>
+            <span class="mode-badge">Professional</span>
+        </div>
+        <div class="mode-items">
+            <span class="mode-pill">Tasks</span>
+            <span class="mode-pill">Requests</span>
+            <span class="mode-pill">Tickets</span>
+            <span class="mode-pill">Appointments</span>
+            <span class="mode-pill">My Work</span>
+        </div>
+        <p class="mode-desc">Track projects, manage requests, and coordinate your team in one place.</p>
     </div>
-    <div class="login-feature">
-        <div class="feature-dot"></div>
-        <div class="feature-text">Track tasks, requests, and tickets in one place</div>
+
+    <!-- School Mode Card -->
+    <div class="mode-card mode-card-school">
+        <div class="mode-card-header">
+            <span class="mode-icon">🎓</span>
+            <span class="mode-title">School Mode</span>
+            <span class="mode-badge">Academic</span>
+        </div>
+        <div class="mode-items">
+            <span class="mode-pill">Homework</span>
+            <span class="mode-pill">Projects / Labs</span>
+            <span class="mode-pill">Exams</span>
+            <span class="mode-pill">Schedule</span>
+            <span class="mode-pill">Timeline</span>
+        </div>
+        <p class="mode-desc">Stay on top of assignments, exams, and your class schedule — all in one view.</p>
     </div>
-    <div class="login-feature">
-        <div class="feature-dot"></div>
-        <div class="feature-text">Dashboard with live status breakdowns</div>
-    </div>
-    <div class="login-feature">
-        <div class="feature-dot"></div>
-        <div class="feature-text">Schedule and manage appointments</div>
-    </div>
-    <div class="login-feature">
-        <div class="feature-dot"></div>
-        <div class="feature-text">Role-based access for your entire team</div>
+
+    <div class="free-note">
+        <div class="free-dot"></div>
+        Free forever — no credit card needed
     </div>
 </div>
 
