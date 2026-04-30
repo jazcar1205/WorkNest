@@ -267,10 +267,10 @@ def forgot_password():
             session["reset_username"] = username
             return redirect(url_for("verify_security"))
         elif user:
-            # Legacy user with no security question — generate link directly
-            token = _token_serializer().dumps(str(user["_id"]), salt="pw-reset")
-            reset_link = url_for("reset_password", token=token, _external=True)
-            return render_template("forgot_password.html", reset_link=reset_link, error=None)
+            # No security question — ask them to set one first
+            session["reset_username"] = username
+            session["reset_needs_setup"] = True
+            return redirect(url_for("verify_security"))
         else:
             error = "No account found with that username."
     return render_template("forgot_password.html", reset_link=None, error=error)
@@ -285,13 +285,42 @@ def verify_security():
     user = users_collection.find_one({"username": username})
     if not user:
         session.pop("reset_username", None)
+        session.pop("reset_needs_setup", None)
         return redirect(url_for("forgot_password"))
 
-    # Check lockout
+    # ── Setup mode: user has no security question yet ──────────────────────────
+    if session.get("reset_needs_setup"):
+        error = None
+        if request.method == "POST":
+            sec_q = request.form.get("security_question", "").strip()
+            sec_a = request.form.get("security_answer", "").strip()
+            if sec_q not in SECURITY_QUESTIONS:
+                error = "Please select a valid security question."
+            elif not sec_a:
+                error = "Please provide an answer."
+            else:
+                users_collection.update_one({"username": username}, {"$set": {
+                    "security_question": sec_q,
+                    "security_answer":   generate_password_hash(sec_a.lower()),
+                }})
+                session.pop("reset_needs_setup", None)
+                session.pop("reset_username", None)
+                token = _token_serializer().dumps(str(user["_id"]), salt="pw-reset")
+                reset_link = url_for("reset_password", token=token, _external=True)
+                return render_template("verify_security.html",
+                    setup_mode=False, reset_link=reset_link, locked=False)
+        return render_template("verify_security.html",
+            setup_mode=True,
+            security_questions=SECURITY_QUESTIONS,
+            error=error,
+            locked=False)
+
+    # ── Verify mode: user already has a security question ─────────────────────
     locked_until = user.get("security_locked_until")
     if locked_until and datetime.utcnow() < locked_until:
         mins = max(1, int((locked_until - datetime.utcnow()).total_seconds() / 60) + 1)
         return render_template("verify_security.html",
+            setup_mode=False,
             question=user["security_question"],
             error=f"Account locked. Try again in {mins} minute(s).",
             locked=True)
@@ -309,6 +338,7 @@ def verify_security():
             token = _token_serializer().dumps(str(user["_id"]), salt="pw-reset")
             reset_link = url_for("reset_password", token=token, _external=True)
             return render_template("verify_security.html",
+                setup_mode=False,
                 question=user["security_question"],
                 reset_link=reset_link,
                 locked=False)
@@ -322,6 +352,7 @@ def verify_security():
                 }})
                 session.pop("reset_username", None)
                 return render_template("verify_security.html",
+                    setup_mode=False,
                     question=user["security_question"],
                     error="Too many incorrect attempts. Account locked for 15 minutes.",
                     locked=True)
@@ -332,6 +363,7 @@ def verify_security():
                 error = f"Incorrect answer. {remaining} attempt(s) remaining."
 
     return render_template("verify_security.html",
+        setup_mode=False,
         question=user["security_question"],
         error=error,
         locked=False)
