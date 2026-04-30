@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaklNest — Forgot Password</title>
+    <title>TaklNest — Security Verification</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -38,7 +38,6 @@
             color: #8A6040;
             font-size: 14px;
             line-height: 1.6;
-            margin-bottom: 0;
         }
 
         .login-main {
@@ -54,7 +53,7 @@
             border: 1px solid #E4D8CC;
             box-shadow: 0 4px 24px rgba(0,0,0,0.08);
             padding: 48px 52px;
-            width: 420px;
+            width: 440px;
             max-width: 92vw;
         }
 
@@ -68,7 +67,18 @@
         .card-sub {
             font-size: 13.5px;
             color: #8A7060;
-            margin: 0 0 32px;
+            margin: 0 0 28px;
+        }
+
+        .question-box {
+            background: #FFF7ED;
+            border: 1px solid #FED7AA;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #9A3412;
+            margin-bottom: 20px;
         }
 
         label {
@@ -108,6 +118,17 @@
             padding: 10px 14px;
             font-size: 13px;
             margin-bottom: 20px;
+        }
+
+        .lock-box {
+            background: #FFF7ED;
+            border: 1px solid #FED7AA;
+            color: #92400E;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 13.5px;
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
 
         .success-box {
@@ -183,34 +204,48 @@
 
 <div class="login-sidebar">
     <div class="login-logo">TaklNest</div>
-    <p class="login-tagline">Enter your username and we'll generate a secure password reset link for you.</p>
+    <p class="login-tagline">Answer your security question to verify your identity before resetting your password.</p>
 </div>
 
 <div class="login-main">
     <div class="login-card">
-        <h1 class="card-title">Forgot Password</h1>
-        <p class="card-sub">We'll create a reset link valid for 1 hour</p>
-
-        {% if error %}
-        <div class="error-box">{{ error }}</div>
-        {% endif %}
 
         {% if reset_link %}
-        <div class="success-box">
-            Reset link generated! Copy the link below and open it to set a new password.
-            <div class="reset-link-box">
-                <a href="{{ reset_link }}">{{ reset_link }}</a>
+            <h1 class="card-title">Identity Verified</h1>
+            <p class="card-sub">Use the link below to set a new password</p>
+            <div class="success-box">
+                Reset link generated! Copy the link below — it expires in 1 hour.
+                <div class="reset-link-box">
+                    <a href="{{ reset_link }}">{{ reset_link }}</a>
+                </div>
             </div>
-        </div>
+            <p class="login-note"><a href="/login">Back to Sign In</a></p>
+
+        {% elif locked %}
+            <h1 class="card-title">Account Locked</h1>
+            <p class="card-sub">Too many incorrect attempts</p>
+            <div class="lock-box">{{ error }}</div>
+            <p class="login-note"><a href="/login">Back to Sign In</a></p>
+
         {% else %}
-        <form method="POST" action="/forgot-password">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
-            <button type="submit" class="btn-submit">Generate Reset Link</button>
-        </form>
+            <h1 class="card-title">Security Check</h1>
+            <p class="card-sub">Answer your security question to continue</p>
+
+            {% if error %}
+            <div class="error-box">{{ error }}</div>
+            {% endif %}
+
+            <div class="question-box">{{ question }}</div>
+
+            <form method="POST" action="/verify-security">
+                <label for="answer">Your Answer</label>
+                <input type="text" id="answer" name="answer" placeholder="Enter your answer" required autofocus autocomplete="off">
+                <button type="submit" class="btn-submit">Verify Answer</button>
+            </form>
+
+            <p class="login-note"><a href="/forgot-password">Back</a> &nbsp;·&nbsp; <a href="/login">Sign In</a></p>
         {% endif %}
 
-        <p class="login-note"><a href="/login">Back to Sign In</a></p>
     </div>
 </div>
 

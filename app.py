@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from functools import wraps
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -12,6 +12,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+
+SECURITY_QUESTIONS = [
+    "What is your mother's maiden name?",
+    "What was the name of your first pet?",
+    "What city were you born in?",
+]
 app.secret_key = os.getenv("SECRET_KEY")
 
 client = MongoClient(os.getenv("MONGO_URI"))
@@ -192,9 +198,11 @@ def register():
     error = None
 
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-        confirm = request.form.get("confirm_password", "")
+        username  = request.form.get("username", "").strip()
+        password  = request.form.get("password", "")
+        confirm   = request.form.get("confirm_password", "")
+        sec_q     = request.form.get("security_question", "").strip()
+        sec_a     = request.form.get("security_answer", "").strip()
 
         if not username:
             error = "Username is required."
@@ -202,18 +210,23 @@ def register():
             error = "Password must be at least 6 characters."
         elif password != confirm:
             error = "Passwords do not match."
+        elif sec_q not in SECURITY_QUESTIONS:
+            error = "Please select a security question."
+        elif not sec_a:
+            error = "Please provide an answer to your security question."
         elif users_collection.find_one({"username": username}):
             error = "That username is already taken."
         else:
-            hashed = generate_password_hash(password)
             users_collection.insert_one({
                 "username": username,
-                "password": hashed,
-                "role": "user"
+                "password": generate_password_hash(password),
+                "role": "user",
+                "security_question": sec_q,
+                "security_answer":   generate_password_hash(sec_a.lower()),
             })
             return redirect(url_for("login"))
 
-    return render_template("register.html", error=error)
+    return render_template("register.html", error=error, security_questions=SECURITY_QUESTIONS)
 
 
 @app.route("/demo/<role>")
@@ -246,17 +259,82 @@ def _token_serializer():
 
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
-    reset_link = None
     error = None
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         user = users_collection.find_one({"username": username})
-        if user:
+        if user and user.get("security_question"):
+            session["reset_username"] = username
+            return redirect(url_for("verify_security"))
+        elif user:
+            # Legacy user with no security question — generate link directly
             token = _token_serializer().dumps(str(user["_id"]), salt="pw-reset")
             reset_link = url_for("reset_password", token=token, _external=True)
+            return render_template("forgot_password.html", reset_link=reset_link, error=None)
         else:
             error = "No account found with that username."
-    return render_template("forgot_password.html", reset_link=reset_link, error=error)
+    return render_template("forgot_password.html", reset_link=None, error=error)
+
+
+@app.route("/verify-security", methods=["GET", "POST"])
+def verify_security():
+    username = session.get("reset_username")
+    if not username:
+        return redirect(url_for("forgot_password"))
+
+    user = users_collection.find_one({"username": username})
+    if not user:
+        session.pop("reset_username", None)
+        return redirect(url_for("forgot_password"))
+
+    # Check lockout
+    locked_until = user.get("security_locked_until")
+    if locked_until and datetime.utcnow() < locked_until:
+        mins = max(1, int((locked_until - datetime.utcnow()).total_seconds() / 60) + 1)
+        return render_template("verify_security.html",
+            question=user["security_question"],
+            error=f"Account locked. Try again in {mins} minute(s).",
+            locked=True)
+    elif locked_until:
+        users_collection.update_one({"username": username},
+            {"$unset": {"security_locked_until": "", "security_attempts": ""}})
+
+    error = None
+    if request.method == "POST":
+        answer = request.form.get("answer", "").strip().lower()
+        if check_password_hash(user.get("security_answer", ""), answer):
+            session.pop("reset_username", None)
+            users_collection.update_one({"username": username},
+                {"$unset": {"security_attempts": ""}})
+            token = _token_serializer().dumps(str(user["_id"]), salt="pw-reset")
+            reset_link = url_for("reset_password", token=token, _external=True)
+            return render_template("verify_security.html",
+                question=user["security_question"],
+                reset_link=reset_link,
+                locked=False)
+        else:
+            attempts = user.get("security_attempts", 0) + 1
+            if attempts >= 3:
+                lock_until = datetime.utcnow() + timedelta(minutes=15)
+                users_collection.update_one({"username": username}, {"$set": {
+                    "security_locked_until": lock_until,
+                    "security_attempts": attempts
+                }})
+                session.pop("reset_username", None)
+                return render_template("verify_security.html",
+                    question=user["security_question"],
+                    error="Too many incorrect attempts. Account locked for 15 minutes.",
+                    locked=True)
+            else:
+                users_collection.update_one({"username": username},
+                    {"$set": {"security_attempts": attempts}})
+                remaining = 3 - attempts
+                error = f"Incorrect answer. {remaining} attempt(s) remaining."
+
+    return render_template("verify_security.html",
+        question=user["security_question"],
+        error=error,
+        locked=False)
 
 
 @app.route("/reset-password/<token>", methods=["GET", "POST"])

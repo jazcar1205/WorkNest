@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TacklNest — Create Account</title>
+    <title>TaklNest — Create Account</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -110,6 +110,7 @@
 
         input[type="text"],
         input[type="password"],
+        input[type="email"],
         select {
             width: 100%;
             padding: 10px 13px;
@@ -126,6 +127,7 @@
 
         input[type="text"]:focus,
         input[type="password"]:focus,
+        input[type="email"]:focus,
         select:focus {
             border-color: #C87941;
             box-shadow: 0 0 0 3px rgba(200,121,65,0.12);
@@ -196,7 +198,7 @@
 <body>
 
 <div class="login-sidebar">
-    <div class="login-logo">TacklNest</div>
+    <div class="login-logo">TaklNest</div>
     <p class="login-tagline">Your unified work management hub for tasks, requests, tickets, and appointments.</p>
 
     <div class="login-feature">
@@ -220,7 +222,7 @@
 <div class="login-main">
     <div class="login-card">
         <h1 class="card-title">Create Account</h1>
-        <p class="card-sub">Join your team on TacklNest</p>
+        <p class="card-sub">Join your team on TaklNest</p>
 
         {% if error %}
         <div class="error-box">{{ error }}</div>
@@ -236,6 +238,18 @@
 
             <label for="confirm_password">Confirm Password</label>
             <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required>
+
+            <label for="security_question">Security Question</label>
+            <select id="security_question" name="security_question" required style="appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22><path fill=%22%238A7060%22 d=%22M1 1l5 5 5-5%22 stroke=%22%238A7060%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/></svg>');background-repeat:no-repeat;background-position:right 13px center;padding-right:36px;cursor:pointer">
+                <option value="" disabled selected>Choose a question…</option>
+                {% for q in security_questions %}
+                <option value="{{ q }}">{{ q }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="security_answer">Your Answer</label>
+            <input type="text" id="security_answer" name="security_answer" placeholder="Your answer (not case-sensitive)" required autocomplete="off">
+            <p class="hint">You'll need this to reset your password</p>
 
             <button type="submit" class="btn-submit">Create Account</button>
         </form>
